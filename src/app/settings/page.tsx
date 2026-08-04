@@ -184,7 +184,7 @@ export default function SettingsPage() {
           {/* Export CSV */}
           <button
             onClick={() => exportTransactionsToCSV(transactions)}
-            className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 transition-colors text-left"
+            className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-200/80 dark:hover:bg-slate-800 transition-colors text-left"
           >
             <div className="flex items-center space-x-3">
               <Download className="w-4 h-4 text-emerald-500" />
@@ -199,7 +199,7 @@ export default function SettingsPage() {
           {/* Theme Toggle */}
           <button
             onClick={toggleDarkMode}
-            className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-100 transition-colors text-left"
+            className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-200/80 dark:hover:bg-slate-800 transition-colors text-left"
           >
             <div className="flex items-center space-x-3">
               {isDarkMode ? (

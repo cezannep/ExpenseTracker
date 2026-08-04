@@ -84,7 +84,7 @@ export function AddTransactionSheet() {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ type: "spring", damping: 26, stiffness: 320 }}
-              className="fixed bottom-0 left-0 right-0 z-50 max-w-md mx-auto bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-2xl rounded-t-[2.5rem] border-t border-slate-200/80 dark:border-slate-800 p-6 pb-8 shadow-2xl"
+              className="fixed bottom-0 left-0 right-0 z-50 max-w-md mx-auto bg-white/95 dark:bg-[#0f172a]/95 backdrop-blur-2xl rounded-t-[2.5rem] border-t border-slate-200/80 dark:border-slate-800 p-6 pb-28 shadow-2xl overflow-y-auto max-h-[90vh]"
             >
               {/* Sheet Handle */}
               <div className="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto mb-5 opacity-60" />
