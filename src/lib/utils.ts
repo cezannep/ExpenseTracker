@@ -37,16 +37,21 @@ export function formatTime(isoString: string): string {
   }).format(date);
 }
 
+export function getLocalDateString(d: Date = new Date()): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 export function isToday(dateString: string): boolean {
-  const today = new Date().toISOString().split("T")[0];
-  return dateString === today;
+  return dateString === getLocalDateString(new Date());
 }
 
 export function isYesterday(dateString: string): boolean {
   const d = new Date();
   d.setDate(d.getDate() - 1);
-  const yesterday = d.toISOString().split("T")[0];
-  return dateString === yesterday;
+  return dateString === getLocalDateString(d);
 }
 
 export function getGreeting(): string {
@@ -55,3 +60,4 @@ export function getGreeting(): string {
   if (hour < 17) return "Good Afternoon ☀️";
   return "Good Evening 🌙";
 }
+

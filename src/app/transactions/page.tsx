@@ -55,7 +55,7 @@ export default function TransactionsPage() {
       <Header />
 
       <div className="px-5 space-y-3">
-        <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
+        <h2 className="text-xl font-bold tracking-tight text-[#071b3a] dark:text-slate-50">
           Transactions
         </h2>
 
@@ -67,15 +67,15 @@ export default function TransactionsPage() {
             placeholder="Search by note, category, or amount..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 text-xs font-medium text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+            className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-[#ffffff] dark:bg-[#071b3a] border border-[#d6dce5] dark:border-[#123c73] text-xs font-medium text-[#071b3a] dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#10d2c3] shadow-sm"
           />
         </div>
 
         {/* Filter Pills */}
         <div className="space-y-2">
-          <div className="flex items-center justify-between text-xs text-slate-500 font-semibold">
+          <div className="flex items-center justify-between text-xs text-[#071b3a]/70 dark:text-slate-400 font-semibold">
             <span className="flex items-center gap-1">
-              <Filter className="w-3.5 h-3.5 text-blue-500" /> Filters
+              <Filter className="w-3.5 h-3.5 text-[#10d2c3]" /> Filters
             </span>
 
             {(typeFilter !== "all" || categoryFilter !== "all" || search) && (
@@ -85,7 +85,7 @@ export default function TransactionsPage() {
                   setTypeFilter("all");
                   setCategoryFilter("all");
                 }}
-                className="text-blue-600 dark:text-blue-400 flex items-center gap-1 hover:underline"
+                className="text-[#10d2c3] flex items-center gap-1 active:opacity-75"
               >
                 <RotateCcw className="w-3 h-3" /> Reset
               </button>
@@ -93,15 +93,15 @@ export default function TransactionsPage() {
           </div>
 
           {/* Type Filter Tabs */}
-          <div className="grid grid-cols-3 p-1 bg-slate-200/60 dark:bg-slate-800/60 rounded-xl text-xs font-semibold">
+          <div className="grid grid-cols-3 p-1 bg-slate-200/60 dark:bg-[#0b2854] rounded-xl text-xs font-semibold">
             {(["all", "income", "expense"] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setTypeFilter(t)}
                 className={`py-1.5 rounded-lg capitalize transition-all ${
                   typeFilter === t
-                    ? "bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50 shadow-xs"
-                    : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
+                    ? "bg-[#071b3a] text-[#10d2c3] dark:bg-[#10d2c3] dark:text-[#071b3a] shadow-xs"
+                    : "text-[#071b3a]/60 dark:text-slate-300 active:text-[#071b3a]"
                 }`}
               >
                 {t}
@@ -115,8 +115,8 @@ export default function TransactionsPage() {
               onClick={() => setCategoryFilter("all")}
               className={`px-3 py-1 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
                 categoryFilter === "all"
-                  ? "bg-blue-600 text-white"
-                  : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300"
+                  ? "bg-[#10d2c3] text-[#071b3a]"
+                  : "bg-[#ffffff] dark:bg-[#071b3a] border border-[#d6dce5] dark:border-[#123c73] text-[#071b3a] dark:text-slate-300"
               }`}
             >
               All Categories
@@ -127,8 +127,8 @@ export default function TransactionsPage() {
                 onClick={() => setCategoryFilter(cat)}
                 className={`px-3 py-1 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
                   categoryFilter === cat
-                    ? "bg-blue-600 text-white"
-                    : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300"
+                    ? "bg-[#10d2c3] text-[#071b3a]"
+                    : "bg-[#ffffff] dark:bg-[#071b3a] border border-[#d6dce5] dark:border-[#123c73] text-[#071b3a] dark:text-slate-300"
                 }`}
               >
                 {cat}

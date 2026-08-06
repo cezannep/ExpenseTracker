@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { Transaction, UserProfile, Category } from "../types";
 import { TransactionRepository, UserRepository } from "../repositories";
+import { getLocalDateString } from "../lib/utils";
 
 interface FilterState {
   searchQuery: string;
@@ -16,6 +17,11 @@ interface AppState {
   setUser: (user: UserProfile | null) => void;
   updateDailyLimit: (limit: number) => Promise<void>;
   updateMonthlyBudget: (budget: number) => Promise<void>;
+
+  // Active Selected Date for Home Dashboard Synchronization
+  selectedHomeDate: string;
+  setSelectedHomeDate: (date: string) => void;
+  resetHomeDateToToday: () => void;
 
   // Transactions
   transactions: Transaction[];
@@ -53,14 +59,33 @@ export const useAppStore = create<AppState>()(
       user: null, // Start unauthenticated so LoginScreen displays initially
       setUser: (user) => set({ user }),
 
+      selectedHomeDate: getLocalDateString(),
+      setSelectedHomeDate: (date) => set({ selectedHomeDate: date }),
+      resetHomeDateToToday: () => set({ selectedHomeDate: getLocalDateString() }),
+
       updateDailyLimit: async (limit) => {
         const currentUser = get().user;
-        set((state) => ({
-          user: state.user ? { ...state.user, dailyLimit: limit } : null,
-        }));
+        const todayStr = getLocalDateString();
+
+        set((state) => {
+          if (!state.user) return { user: null };
+          const updatedHistory = {
+            ...(state.user.dailyBudgetHistory || {}),
+            [todayStr]: limit,
+          };
+          return {
+            user: {
+              ...state.user,
+              dailyLimit: limit,
+              dailyBudgetHistory: updatedHistory,
+            },
+          };
+        });
+
         if (currentUser?.uid) {
           try {
             await UserRepository.updateDailyLimit(currentUser.uid, limit);
+            await UserRepository.saveDailyBudgetSnapshot(currentUser.uid, todayStr, limit);
           } catch (err) {
             console.error("Firestore sync error on updateDailyLimit:", err);
           }
@@ -128,19 +153,30 @@ export const useAppStore = create<AppState>()(
       },
 
       deleteTransaction: async (id) => {
-        // Optimistic local state update
+        const currentUser = get().user;
+        console.log(`[useAppStore] deleteTransaction called for ID: "${id}". Current User UID: "${currentUser?.uid || "none"}"`);
+
+        // If authenticated and real Firestore doc ID (not optimistic temp ID)
+        if (currentUser?.uid && !id.startsWith("tx-")) {
+          try {
+            console.log(`[useAppStore] Sending delete request to Firestore for ID: "${id}"...`);
+            await TransactionRepository.deleteTransaction(id);
+            console.log(`[useAppStore] ✅ Firestore confirmed deletion for ID: "${id}"`);
+          } catch (err) {
+            console.error(`[useAppStore] ❌ Firestore deletion FAILED for ID: "${id}":`, err);
+            throw err; // Re-throw so caller (UI) can display error and preserve state
+          }
+        } else if (id.startsWith("tx-")) {
+          console.log(`[useAppStore] ℹ️ ID "${id}" is a temporary local ID. Skipping Firestore network call.`);
+        } else {
+          console.log(`[useAppStore] ℹ️ User not logged in. Deleting ID "${id}" from local state only.`);
+        }
+
+        // Deletion confirmed by Firestore (or local temp/guest item) -> update local state
         set((state) => ({
           transactions: state.transactions.filter((t) => t.id !== id),
         }));
-
-        // Only call Firestore deleteDoc if it's a real Firestore document ID (not a local temp ID)
-        if (!id.startsWith("tx-")) {
-          try {
-            await TransactionRepository.deleteTransaction(id);
-          } catch (err) {
-            console.error("Firestore sync error on deleteTransaction:", err);
-          }
-        }
+        console.log(`[useAppStore] ✅ Local Zustand state updated. Removed ID "${id}".`);
       },
 
       filters: {
@@ -198,7 +234,7 @@ export const useAppStore = create<AppState>()(
       },
 
       getSpentToday: () => {
-        const today = new Date().toISOString().split("T")[0];
+        const today = getLocalDateString();
         return get()
           .transactions.filter((t) => t.type === "expense" && t.date === today)
           .reduce((sum, t) => sum + t.amount, 0);

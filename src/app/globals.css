@@ -3,17 +3,29 @@
 @variant dark (&:where(.dark, .dark *));
 
 :root {
-  --background: #f1f5f9;
-  --foreground: #0f172a;
+  --color-primary: #071b3a;
+  --color-primary-700: #123c73;
+  --color-primary-800: #0b2854;
+  --color-primary-900: #071b3a;
+  --color-primary-950: #031023;
+  
+  --color-accent: #14ead8;
+  --color-accent-400: #4fe5d9;
+  --color-accent-500: #24dacd;
+  --color-accent-600: #10d2c3;
+  --color-accent-700: #0cb6a8;
+  
+  --background: #f8fafc;
+  --foreground: #071b3a;
   --card-bg: #ffffff;
-  --card-border: rgba(226, 232, 240, 0.8);
+  --card-border: #d6dce5;
 }
 
 .dark {
-  --background: #090d16;
+  --background: #031023;
   --foreground: #f8fafc;
-  --card-bg: #111827;
-  --card-border: rgba(31, 41, 55, 0.8);
+  --card-bg: #071b3a;
+  --card-border: #123c73;
 }
 
 body {
@@ -24,13 +36,13 @@ body {
 
 /* Glassmorphism helpers */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
 
 .dark .glass-panel {
-  background: rgba(15, 23, 42, 0.75);
+  background: rgba(7, 27, 58, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
@@ -45,4 +57,5 @@ body {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
+
 

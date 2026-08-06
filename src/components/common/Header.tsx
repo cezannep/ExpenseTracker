@@ -1,22 +1,42 @@
 "use client";
 
-import React from "react";
-import { getGreeting, formatDate } from "@/lib/utils";
+import React, { useState, useEffect } from "react";
+import { getGreeting, formatDate, getLocalDateString } from "@/lib/utils";
 import { useAppStore } from "@/stores/useAppStore";
 import { User, Sun, Moon } from "lucide-react";
 
 export function Header() {
   const { user, isDarkMode, toggleDarkMode } = useAppStore();
-  const greeting = getGreeting();
-  const currentDate = formatDate(new Date().toISOString());
+
+  // Reactive state for current date and greeting that ticks automatically when date changes
+  const [currentDateStr, setCurrentDateStr] = useState(() => getLocalDateString());
+  const [greeting, setGreeting] = useState(() => getGreeting());
+
+  useEffect(() => {
+    // Tick timer to check date change across midnight (or hourly for greeting update)
+    const interval = setInterval(() => {
+      const freshDateStr = getLocalDateString();
+      if (freshDateStr !== currentDateStr) {
+        setCurrentDateStr(freshDateStr);
+      }
+      const freshGreeting = getGreeting();
+      if (freshGreeting !== greeting) {
+        setGreeting(freshGreeting);
+      }
+    }, 10000); // Check every 10 seconds
+
+    return () => clearInterval(interval);
+  }, [currentDateStr, greeting]);
+
+  const currentDateFormatted = formatDate(currentDateStr);
 
   return (
-    <header className="px-5 pt-5 pb-3 flex items-center justify-between bg-slate-50/95 dark:bg-[#0b0f19]/95 backdrop-blur-2xl fixed top-0 left-0 right-0 max-w-md mx-auto z-40 border-b border-slate-200/60 dark:border-slate-800/60 shadow-xs">
+    <header className="px-5 pt-5 pb-3 flex items-center justify-between bg-[#f8fafc]/95 dark:bg-[#071b3a]/95 backdrop-blur-2xl fixed top-0 left-0 right-0 max-w-md mx-auto z-40 border-b border-[#d6dce5] dark:border-[#123c73] shadow-xs">
       <div>
-        <p className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 tracking-wider uppercase">
-          {currentDate}
+        <p className="text-[11px] font-bold text-[#10d2c3] tracking-wider uppercase">
+          {currentDateFormatted}
         </p>
-        <h1 className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+        <h1 className="text-xl font-extrabold text-[#071b3a] dark:text-white tracking-tight">
           {greeting}
         </h1>
       </div>
@@ -24,18 +44,18 @@ export function Header() {
       <div className="flex items-center space-x-2.5">
         <button
           onClick={toggleDarkMode}
-          className="p-2.5 rounded-full bg-slate-200/80 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 hover:bg-slate-300/80 dark:hover:bg-slate-700/80 transition-all active:scale-95 shadow-sm border border-slate-300/40 dark:border-slate-700/50"
+          className="p-2.5 rounded-full bg-[#f8fafc] dark:bg-[#0b2854] text-[#071b3a] dark:text-slate-200 active:bg-slate-200 dark:active:bg-[#123c73] transition-all active:scale-95 shadow-sm border border-[#d6dce5] dark:border-[#123c73]"
           aria-label="Toggle Theme"
         >
-          {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-700" />}
+          {isDarkMode ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-[#071b3a]" />}
         </button>
 
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-emerald-500 p-[2px] shadow-md shadow-indigo-500/10">
-          <div className="w-full h-full rounded-full bg-slate-100 dark:bg-slate-900 flex items-center justify-center text-indigo-600 dark:text-indigo-400 font-bold overflow-hidden">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#10d2c3] to-[#123c73] p-[2px] shadow-md shadow-[#10d2c3]/20">
+          <div className="w-full h-full rounded-full bg-[#ffffff] dark:bg-[#031023] flex items-center justify-center text-[#10d2c3] font-bold overflow-hidden">
             {user?.photoURL ? (
               <img src={user.photoURL} alt={user.name} className="w-full h-full object-cover" />
             ) : (
-              <User className="w-5 h-5" />
+              <User className="w-5 h-5 text-[#10d2c3]" />
             )}
           </div>
         </div>
@@ -43,4 +63,3 @@ export function Header() {
     </header>
   );
 }
-

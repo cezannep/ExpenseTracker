@@ -67,7 +67,7 @@ export default function SettingsPage() {
         {/* Profile Card */}
         <div className="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center text-white font-black text-xl shadow-md shadow-blue-500/20 overflow-hidden">
+            <div className="w-14 h-14 rounded-2xl bg-indigo-600 flex items-center justify-center text-white font-black text-xl shadow-md shadow-indigo-500/20 overflow-hidden">
               {user?.photoURL ? (
                 <img src={user.photoURL} alt={user.name} className="w-full h-full object-cover" />
               ) : (
@@ -84,7 +84,7 @@ export default function SettingsPage() {
 
           <button
             onClick={handleSignOut}
-            className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/50 hover:bg-rose-100 transition-colors"
+            className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/50 active:bg-rose-100 dark:active:bg-rose-900/60 transition-colors"
             title="Sign Out"
           >
             <LogOut className="w-4 h-4" />
@@ -103,7 +103,7 @@ export default function SettingsPage() {
             {!isEditingLimit && (
               <button
                 onClick={() => setIsEditingLimit(true)}
-                className="text-xs font-bold text-indigo-500 hover:underline flex items-center gap-1"
+                className="text-xs font-bold text-indigo-500 active:opacity-75 flex items-center gap-1"
               >
                 <Edit3 className="w-3 h-3" /> Edit
               </button>
@@ -121,7 +121,7 @@ export default function SettingsPage() {
               />
               <button
                 type="submit"
-                className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold shadow-sm"
+                className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold shadow-sm active:bg-indigo-700"
               >
                 Save
               </button>
@@ -145,7 +145,7 @@ export default function SettingsPage() {
             {!isEditingMonthly && (
               <button
                 onClick={() => setIsEditingMonthly(true)}
-                className="text-xs font-bold text-emerald-500 hover:underline flex items-center gap-1"
+                className="text-xs font-bold text-emerald-500 active:opacity-75 flex items-center gap-1"
               >
                 <Edit3 className="w-3 h-3" /> Edit
               </button>
@@ -163,7 +163,7 @@ export default function SettingsPage() {
               />
               <button
                 type="submit"
-                className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-sm"
+                className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-sm active:bg-emerald-700"
               >
                 Save
               </button>
@@ -184,7 +184,7 @@ export default function SettingsPage() {
           {/* Export CSV */}
           <button
             onClick={() => exportTransactionsToCSV(transactions)}
-            className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-200/80 dark:hover:bg-slate-800 transition-colors text-left"
+            className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 active:bg-slate-200/80 dark:active:bg-slate-800 transition-colors text-left"
           >
             <div className="flex items-center space-x-3">
               <Download className="w-4 h-4 text-emerald-500" />
@@ -199,7 +199,7 @@ export default function SettingsPage() {
           {/* Theme Toggle */}
           <button
             onClick={toggleDarkMode}
-            className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 hover:bg-slate-200/80 dark:hover:bg-slate-800 transition-colors text-left"
+            className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 active:bg-slate-200/80 dark:active:bg-slate-800 transition-colors text-left"
           >
             <div className="flex items-center space-x-3">
               {isDarkMode ? (

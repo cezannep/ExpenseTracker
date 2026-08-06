@@ -53,8 +53,10 @@ export class TransactionRepository {
   }
 
   static async deleteTransaction(id: string): Promise<void> {
+    console.log(`[Firestore DB] Initiating deleteDoc for document ID: "${id}"...`);
     const docRef = doc(db, this.collectionName, id);
     await deleteDoc(docRef);
+    console.log(`[Firestore DB] ✅ SUCCESS: Document "${id}" successfully deleted from Firebase Cloud Firestore!`);
   }
 
   static async getUserTransactions(userId: string): Promise<Transaction[]> {
@@ -116,6 +118,13 @@ export class UserRepository {
   static async updateDailyLimit(userId: string, limit: number): Promise<void> {
     const docRef = doc(db, this.collectionName, userId);
     await updateDoc(docRef, { dailyLimit: limit });
+  }
+
+  static async saveDailyBudgetSnapshot(userId: string, date: string, limit: number): Promise<void> {
+    const docRef = doc(db, this.collectionName, userId);
+    await updateDoc(docRef, {
+      [`dailyBudgetHistory.${date}`]: limit
+    });
   }
 
   static async updateMonthlyBudget(userId: string, budget: number): Promise<void> {

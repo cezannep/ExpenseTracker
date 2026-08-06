@@ -4,6 +4,7 @@ import "./globals.css";
 import { MobileContainer } from "@/components/common/MobileContainer";
 import { BottomNav } from "@/components/common/BottomNav";
 import { AddTransactionSheet } from "@/components/modals/AddTransactionSheet";
+import { PWAInstallPrompt } from "@/components/common/PWAInstallPrompt";
 import { ThemeInitializer } from "@/components/common/ThemeInitializer";
 import { AuthGuard } from "@/components/auth/AuthGuard";
 
@@ -54,6 +55,7 @@ export default function RootLayout({
             <MobileContainer>
               {children}
               <AddTransactionSheet />
+              <PWAInstallPrompt />
               <BottomNav />
             </MobileContainer>
           </AuthGuard>

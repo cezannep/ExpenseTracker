@@ -1,21 +1,26 @@
 {
-  "short_name": "Expenses",
+  "short_name": "ExpenseTracker",
   "name": "Personal Expense Tracker PWA",
+  "description": "Mobile-first PWA personal expense and budget tracker",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#070a11",
+  "theme_color": "#070a11",
+  "categories": ["finance", "productivity"],
   "icons": [
     {
       "src": "/icons/icon-192x192.png",
       "type": "image/png",
-      "sizes": "192x192"
+      "sizes": "192x192",
+      "purpose": "any maskable"
     },
     {
       "src": "/icons/icon-512x512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
-  ],
-  "start_url": "/",
-  "background_color": "#0F172A",
-  "theme_color": "#0F172A",
-  "display": "standalone",
-  "orientation": "portrait"
+  ]
 }

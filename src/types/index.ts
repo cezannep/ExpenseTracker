@@ -31,12 +31,19 @@ export interface Transaction {
   createdAt: string; // ISO String
 }
 
+export interface DailyBudgetSnapshot {
+  date: string; // YYYY-MM-DD
+  dailyLimit: number;
+  updatedAt: string;
+}
+
 export interface UserProfile {
   uid: string;
   name: string;
   email: string;
   photoURL?: string;
   dailyLimit: number;
+  dailyBudgetHistory?: Record<string, number>; // Map date YYYY-MM-DD -> limit amount
   monthlyBudget?: number;
   createdAt: string;
 }

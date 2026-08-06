@@ -7,7 +7,7 @@ import { formatCurrency } from "@/lib/utils";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis } from "recharts";
 import { TrendingUp, PieChart as PieIcon, BarChart2, Award, Zap, Activity } from "lucide-react";
 
-const COLORS = ["#2563EB", "#22C55E", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899", "#14B8A6", "#64748B"];
+const COLORS = ["#10D2C3", "#123C73", "#4FE5D9", "#0B2854", "#0CB6A8", "#071B3A", "#24DACD", "#099287"];
 
 export default function AnalyticsPage() {
   const { transactions, getBalance, getTotalIncome, getTotalExpense } = useAppStore();
@@ -68,32 +68,32 @@ export default function AnalyticsPage() {
       <Header />
 
       <div className="px-5 space-y-4">
-        <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
+        <h2 className="text-xl font-bold tracking-tight text-[#071b3a] dark:text-slate-50">
           Analytics & Insights
         </h2>
 
         {/* Executive Summary Card */}
-        <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3">
-          <div className="flex items-center space-x-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">
-            <TrendingUp className="w-4 h-4 text-blue-600" /> Summary Breakdown
+        <div className="p-5 rounded-3xl bg-[#ffffff] dark:bg-[#071b3a] border border-[#d6dce5] dark:border-[#123c73] shadow-sm space-y-3">
+          <div className="flex items-center space-x-2 text-xs font-bold text-[#071b3a]/70 dark:text-slate-300 uppercase tracking-wide">
+            <TrendingUp className="w-4 h-4 text-[#10d2c3]" /> Summary Breakdown
           </div>
 
           <div className="grid grid-cols-3 gap-2 text-center pt-2">
-            <div className="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50">
+            <div className="p-2.5 rounded-2xl bg-[#f8fafc] dark:bg-[#0b2854]">
               <p className="text-[10px] text-slate-500 font-medium">Income</p>
-              <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+              <p className="text-xs font-extrabold text-[#10d2c3]">
                 {formatCurrency(income)}
               </p>
             </div>
-            <div className="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50">
+            <div className="p-2.5 rounded-2xl bg-[#f8fafc] dark:bg-[#0b2854]">
               <p className="text-[10px] text-slate-500 font-medium">Expense</p>
-              <p className="text-xs font-bold text-rose-600 dark:text-rose-400">
+              <p className="text-xs font-extrabold text-rose-500 dark:text-rose-400">
                 {formatCurrency(expense)}
               </p>
             </div>
-            <div className="p-2.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50">
+            <div className="p-2.5 rounded-2xl bg-[#f8fafc] dark:bg-[#0b2854]">
               <p className="text-[10px] text-slate-500 font-medium">Net Savings</p>
-              <p className="text-xs font-bold text-blue-600 dark:text-blue-400">
+              <p className="text-xs font-extrabold text-[#10d2c3]">
                 {formatCurrency(balance)}
               </p>
             </div>
@@ -101,9 +101,9 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Category Breakdown Pie Chart */}
-        <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3">
-          <div className="flex items-center space-x-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">
-            <PieIcon className="w-4 h-4 text-blue-600" /> Category Breakdown
+        <div className="p-5 rounded-3xl bg-[#ffffff] dark:bg-[#071b3a] border border-[#d6dce5] dark:border-[#123c73] shadow-sm space-y-3">
+          <div className="flex items-center space-x-2 text-xs font-bold text-[#071b3a]/70 dark:text-slate-300 uppercase tracking-wide">
+            <PieIcon className="w-4 h-4 text-[#10d2c3]" /> Category Breakdown
           </div>
 
           {categoryData.length ? (
