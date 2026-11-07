@@ -1,33 +1,34 @@
 "use client";
 
 import React from "react";
-import { PlusCircle, ArrowDownLeft } from "lucide-react";
+import { Plus, ArrowUpRight } from "lucide-react";
 import { useAppStore } from "@/stores/useAppStore";
 import { motion } from "framer-motion";
 
 export function QuickActions() {
-  const { openAddModal } = useAppStore();
+  const { openAddModal, selectedHomeDate } = useAppStore();
 
   return (
-    <div className="mx-5 grid grid-cols-2 gap-3.5">
+    <div className="mx-5 grid grid-cols-2 gap-3">
+      {/* Left Action: Add Expense (Solid White Pill Button) */}
       <motion.button
-        whileTap={{ scale: 0.95 }}
-        onClick={() => openAddModal("expense")}
-        className="flex items-center justify-center space-x-2.5 py-3.5 px-4 rounded-2xl bg-rose-500/10 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold text-xs uppercase tracking-wider border border-rose-500/20 shadow-sm active:bg-rose-500/20 transition-all"
+        whileTap={{ scale: 0.96 }}
+        onClick={() => openAddModal("expense", selectedHomeDate)}
+        className="flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl bg-slate-900 text-white dark:bg-white dark:text-black font-bold text-xs shadow-sm transition-all"
       >
-        <PlusCircle className="w-4 h-4 text-rose-500" />
+        <Plus className="w-4 h-4 stroke-[2.5]" />
         <span>Add Expense</span>
       </motion.button>
 
+      {/* Right Action: Add Income (Outlined Card Button) */}
       <motion.button
-        whileTap={{ scale: 0.95 }}
-        onClick={() => openAddModal("income")}
-        className="flex items-center justify-center space-x-2.5 py-3.5 px-4 rounded-2xl bg-[#10d2c3]/10 dark:bg-[#10d2c3]/10 text-[#10d2c3] font-bold text-xs uppercase tracking-wider border border-[#10d2c3]/20 shadow-sm active:bg-[#10d2c3]/20 transition-all"
+        whileTap={{ scale: 0.96 }}
+        onClick={() => openAddModal("income", selectedHomeDate)}
+        className="flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl bg-white dark:bg-[#12171f] border border-[#e2e8f0] dark:border-[#1d2633] text-slate-900 dark:text-white font-bold text-xs shadow-sm hover:bg-slate-50 dark:hover:bg-[#18202a] transition-all"
       >
-        <ArrowDownLeft className="w-4 h-4 text-[#10d2c3]" />
+        <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
         <span>Add Income</span>
       </motion.button>
     </div>
   );
 }
-

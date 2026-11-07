@@ -6,31 +6,35 @@ import { auth } from "@/lib/firebase";
 import { useAppStore } from "@/stores/useAppStore";
 import { LoginScreen } from "@/components/auth/LoginScreen";
 import { TransactionRepository, UserRepository } from "@/repositories";
+import { UserProfile } from "@/types";
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { user, setUser, setTransactions } = useAppStore();
-  // If user is already loaded from local storage, don't show blocking spinner on refresh
   const [loading, setLoading] = useState(!user);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
-        let profile = null;
+        let profile: UserProfile | null = null;
         try {
-          // Fetch profile from Firestore asynchronously
           profile = await UserRepository.getUserProfile(firebaseUser.uid);
         } catch (err) {
           console.warn("Firestore profile fetch error, fallback to Auth profile:", err);
         }
 
         if (!profile) {
+          const now = new Date().toISOString();
           profile = {
             uid: firebaseUser.uid,
             name: firebaseUser.displayName || "Personal Account",
             email: firebaseUser.email || "",
             photoURL: firebaseUser.photoURL || undefined,
-            dailyLimit: 150,
-            createdAt: new Date().toISOString(),
+            dailyLimitPaise: 15000,
+            monthlyBudgetPaise: 450000,
+            timezone: "Asia/Kolkata",
+            currency: "INR",
+            createdAt: now,
+            updatedAt: now,
           };
           try {
             await UserRepository.createOrUpdateProfile(profile);
@@ -49,8 +53,8 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
           console.warn("Firestore transactions read error (using local state fallback):", err);
         }
       } else {
-        // If logged out from Firebase and no local user
-        if (!user) {
+        const currentUser = useAppStore.getState().user;
+        if (!currentUser) {
           setUser(null);
         }
       }

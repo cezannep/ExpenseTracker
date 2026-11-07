@@ -37,10 +37,11 @@ export function DeleteConfirmationModal({
       await onConfirm();
       setIsDeleting(false);
       onClose();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Deletion failed:", err);
       setIsDeleting(false);
-      setErrorMessage(err?.message || "Failed to delete transaction. Please try again.");
+      const msg = err instanceof Error ? err.message : "Failed to delete transaction. Please try again.";
+      setErrorMessage(msg);
     }
   };
 
@@ -62,7 +63,7 @@ export function DeleteConfirmationModal({
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0, y: 10 }}
           transition={{ type: "spring", damping: 25, stiffness: 350 }}
-          className="relative w-full max-w-sm bg-[#ffffff] dark:bg-[#071b3a] rounded-3xl p-6 shadow-2xl border border-[#d6dce5] dark:border-[#123c73] z-10 text-[#071b3a] dark:text-slate-100"
+          className="relative w-full max-w-sm bg-white dark:bg-[#12171f] rounded-3xl p-6 shadow-2xl border border-slate-200 dark:border-[#1d2633] z-10 text-slate-900 dark:text-slate-100"
         >
           <div className="flex items-center justify-between mb-4">
             <div className="p-3 rounded-2xl bg-rose-500/10 text-rose-500 border border-rose-500/20">

@@ -1,63 +1,17 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { formatPaiseToINR } from "./money";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatCurrency(amount: number, currency: string = "INR"): string {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: currency,
-    maximumFractionDigits: 0,
-  }).format(amount);
+export * from "./money";
+export * from "./date";
+
+/**
+ * Format currency utility. Defaults to treating amount as paise integers.
+ */
+export function formatCurrency(amountPaise: number, showDecimals: boolean = false): string {
+  return formatPaiseToINR(amountPaise, showDecimals);
 }
-
-export function formatDate(dateString: string): string {
-  if (!dateString) return "";
-  const date = new Date(dateString);
-  if (isNaN(date.getTime())) return dateString;
-  
-  return new Intl.DateTimeFormat("en-IN", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }).format(date);
-}
-
-export function formatTime(isoString: string): string {
-  if (!isoString) return "";
-  const date = new Date(isoString);
-  if (isNaN(date.getTime())) return "";
-
-  return new Intl.DateTimeFormat("en-IN", {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true,
-  }).format(date);
-}
-
-export function getLocalDateString(d: Date = new Date()): string {
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
-
-export function isToday(dateString: string): boolean {
-  return dateString === getLocalDateString(new Date());
-}
-
-export function isYesterday(dateString: string): boolean {
-  const d = new Date();
-  d.setDate(d.getDate() - 1);
-  return dateString === getLocalDateString(d);
-}
-
-export function getGreeting(): string {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good Morning 👋";
-  if (hour < 17) return "Good Afternoon ☀️";
-  return "Good Evening 🌙";
-}
-

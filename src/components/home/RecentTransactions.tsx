@@ -2,7 +2,8 @@
 
 import React from "react";
 import { Transaction } from "@/types";
-import { formatCurrency, formatDate, formatTime, getLocalDateString, isToday, isYesterday } from "@/lib/utils";
+import { formatRelativeOrDate, formatTime, getLocalDateString } from "@/lib/utils";
+import { formatPaiseToINR } from "@/lib/money";
 import { useAppStore } from "@/stores/useAppStore";
 import { 
   Utensils, 
@@ -18,6 +19,7 @@ import {
   Gift,
   Landmark,
   Wallet,
+  FileText,
   Trash2
 } from "lucide-react";
 import { DeleteConfirmationModal } from "@/components/modals/DeleteConfirmationModal";
@@ -42,64 +44,83 @@ const CATEGORY_ICONS: Record<string, React.ElementType> = {
 interface TransactionItemProps {
   transaction: Transaction;
   onDelete?: (id: string) => void;
+  onEdit?: (tx: Transaction) => void;
+  showDate?: boolean;
 }
 
-export function TransactionCard({ transaction, onDelete }: TransactionItemProps) {
+export function TransactionCard({ transaction, onDelete, onEdit, showDate }: TransactionItemProps) {
+  const openEditModal = useAppStore((state) => state.openEditModal);
   const Icon = CATEGORY_ICONS[transaction.category] || HelpCircle;
   const isIncome = transaction.type === "income";
   const [showDeleteModal, setShowDeleteModal] = React.useState(false);
+
+  const handleEdit = () => {
+    if (onEdit) {
+      onEdit(transaction);
+    } else {
+      openEditModal(transaction);
+    }
+  };
+
+  const formattedDate = formatRelativeOrDate(transaction.date);
 
   return (
     <>
       <motion.div
         layout
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        className="p-3.5 rounded-2xl bg-[#ffffff]/95 dark:bg-[#071b3a]/95 backdrop-blur-xl border border-[#d6dce5] dark:border-[#123c73] shadow-sm flex items-center justify-between transition-all active:bg-slate-100/80 dark:active:bg-[#0b2854]"
+        exit={{ opacity: 0, scale: 0.96 }}
+        onClick={handleEdit}
+        className="group p-3 rounded-2xl bg-white dark:bg-[#12171f] border border-slate-200/80 dark:border-[#1d2633] flex items-center justify-between cursor-pointer transition-all hover:border-slate-300 dark:hover:border-slate-700 shadow-xs"
       >
-        <div className="flex items-center space-x-3.5">
-          <div
-            className={`p-2.5 rounded-2xl flex items-center justify-center border ${
-              isIncome
-                ? "bg-[#10d2c3]/10 text-[#10d2c3] border-[#10d2c3]/20"
-                : "bg-[#071b3a]/10 text-[#071b3a] dark:text-slate-200 border-[#071b3a]/20"
-            }`}
-          >
-            <Icon className="w-4 h-4 stroke-[2.2]" />
+        <div className="flex items-center">
+          {/* Rounded Square Icon Box */}
+          <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-[#18202a] border border-slate-200/80 dark:border-[#222d3b] flex items-center justify-center text-slate-700 dark:text-slate-300 shrink-0 mr-3">
+            <Icon className="w-4 h-4 stroke-[1.8]" />
           </div>
 
           <div>
-            <h4 className="text-sm font-bold text-[#071b3a] dark:text-white tracking-tight">
+            <h4 className="text-sm font-bold text-slate-900 dark:text-white leading-tight">
               {transaction.category}
             </h4>
-            <p className="text-xs text-[#071b3a]/60 dark:text-slate-400 line-clamp-1 max-w-[150px]">
-              {transaction.note || transaction.date}
+            <p className="text-xs text-slate-500 dark:text-[#8e9aa8] leading-tight mt-0.5 line-clamp-1">
+              {showDate
+                ? transaction.note
+                  ? `${transaction.note} • ${formattedDate}`
+                  : formattedDate
+                : transaction.note || formattedDate}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center gap-2">
           <div className="text-right">
             <p
-              className={`text-sm font-extrabold tracking-tight ${
-                isIncome ? "text-[#10d2c3]" : "text-rose-500 dark:text-rose-400"
+              className={`text-sm font-bold leading-tight ${
+                isIncome
+                  ? "text-emerald-500 dark:text-emerald-400"
+                  : "text-rose-500 dark:text-rose-400"
               }`}
             >
-              {isIncome ? "+" : "-"}{formatCurrency(transaction.amount)}
+              {isIncome ? "+" : "-"}{formatPaiseToINR(transaction.amountPaise, transaction.amountPaise % 100 !== 0)}
             </p>
-            <p className="text-[10px] font-medium text-slate-400">
+            <p className="text-[11px] text-slate-400 dark:text-[#8e9aa8] leading-tight mt-0.5">
               {formatTime(transaction.createdAt)}
             </p>
           </div>
 
           {onDelete && (
             <button
-              onClick={() => setShowDeleteModal(true)}
-              className="text-slate-400 active:text-rose-500 active:bg-rose-500/20 transition-all p-2 rounded-xl border border-[#d6dce5] dark:border-[#123c73]"
-              title="Delete transaction"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowDeleteModal(true);
+              }}
+              className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-500 transition-opacity p-1.5 ml-1"
+              title="Delete"
+              aria-label="Delete transaction"
             >
-              <Trash2 className="w-4 h-4 text-rose-500" />
+              <Trash2 className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
@@ -119,11 +140,11 @@ export function TransactionCard({ transaction, onDelete }: TransactionItemProps)
 }
 
 export function RecentTransactionsGrouped() {
-  const { transactions, deleteTransaction, selectedHomeDate } = useAppStore();
+  const { transactions, deleteTransaction, openEditModal, selectedHomeDate } = useAppStore();
 
-  // Filter transactions for the selected home date only
+  const targetDate = selectedHomeDate || getLocalDateString();
+
   const activeDayTransactions = React.useMemo(() => {
-    const targetDate = selectedHomeDate || getLocalDateString();
     return transactions
       .filter((tx) => (tx.date || getLocalDateString()) === targetDate)
       .sort((a, b) => {
@@ -131,48 +152,52 @@ export function RecentTransactionsGrouped() {
         const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
         return timeB - timeA;
       });
-  }, [transactions, selectedHomeDate]);
+  }, [transactions, targetDate]);
 
-  // Compute date header label matching exact requirement:
-  // "Today" for current date, "Yesterday" for 1 day prior, "6 Aug 2026", etc.
   const dateHeadingLabel = React.useMemo(() => {
-    const targetDate = selectedHomeDate || getLocalDateString();
-    if (isToday(targetDate)) return "Today";
-    if (isYesterday(targetDate)) return "Yesterday";
-    return formatDate(targetDate);
-  }, [selectedHomeDate]);
+    return formatRelativeOrDate(targetDate);
+  }, [targetDate]);
 
   return (
-    <div className="mx-5 space-y-3">
-      {/* Date Heading Header */}
+    <div className="mx-5 space-y-2.5">
+      {/* Header: Title on Left, Count on Right */}
       <div className="flex items-center justify-between px-1">
-        <h3 className="text-xs font-black uppercase tracking-wider text-[#071b3a]/70 dark:text-slate-300">
+        <h3 className="text-sm font-bold text-slate-900 dark:text-white">
           {dateHeadingLabel}
         </h3>
-        <span className="text-[10px] font-bold text-slate-400">
+        <span className="text-xs font-medium text-slate-500 dark:text-[#8e9aa8]">
           {activeDayTransactions.length} {activeDayTransactions.length === 1 ? "item" : "items"}
         </span>
       </div>
 
-      {/* Transaction List or Empty State */}
+      {/* Transaction List or Clean Empty State */}
       <AnimatePresence mode="wait">
         <motion.div
-          key={selectedHomeDate}
-          initial={{ opacity: 0, y: 10 }}
+          key={targetDate}
+          initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.2 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.15 }}
           className="space-y-2"
         >
           {activeDayTransactions.length === 0 ? (
-            <div className="p-8 text-center bg-[#ffffff]/90 dark:bg-[#071b3a]/90 rounded-3xl border border-[#d6dce5] dark:border-[#123c73]">
-              <p className="text-[#071b3a]/60 dark:text-slate-400 text-xs font-medium">
-                No transactions recorded for this day.
+            <div className="py-10 px-4 rounded-3xl bg-slate-50/70 dark:bg-[#12171f]/60 border border-slate-200/80 dark:border-[#1d2633] flex flex-col items-center justify-center text-center">
+              <FileText className="w-8 h-8 text-slate-400 dark:text-slate-500 mb-2 stroke-[1.5]" />
+              <p className="text-sm font-bold text-slate-900 dark:text-white">
+                No transactions yet
+              </p>
+              <p className="text-xs text-slate-500 dark:text-[#8e9aa8] mt-0.5">
+                Add an income or expense to get started.
               </p>
             </div>
           ) : (
             activeDayTransactions.map((tx) => (
-              <TransactionCard key={tx.id} transaction={tx} onDelete={deleteTransaction} />
+              <TransactionCard 
+                key={tx.id} 
+                transaction={tx} 
+                onDelete={deleteTransaction}
+                onEdit={openEditModal}
+              />
             ))
           )}
         </motion.div>

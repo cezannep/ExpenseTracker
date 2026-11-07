@@ -1,24 +1,26 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { Transaction, UserProfile, Category } from "../types";
-import { TransactionRepository, UserRepository } from "../repositories";
-import { getLocalDateString } from "../lib/utils";
+import { Transaction, UserProfile, Category, CreateTransactionInput, UpdateTransactionInput } from "../types";
+import { TransactionService } from "../services/transactionService";
+import { BudgetService } from "../services/budgetService";
+import { UserRepository } from "../repositories";
+import { getLocalDateString, getCurrentMonthString } from "../lib/date";
 
-interface FilterState {
+export interface FilterState {
   searchQuery: string;
   type: "all" | "income" | "expense";
   period: "all" | "today" | "week" | "month" | "year";
-  category: Category | "all";
+  category: Category | string | "all";
 }
 
-interface AppState {
+export interface AppState {
   // Auth & Profile
   user: UserProfile | null;
   setUser: (user: UserProfile | null) => void;
-  updateDailyLimit: (limit: number) => Promise<void>;
-  updateMonthlyBudget: (budget: number) => Promise<void>;
+  updateDailyLimit: (limitPaise: number) => Promise<void>;
+  updateMonthlyBudget: (budgetPaise: number) => Promise<void>;
 
-  // Active Selected Date for Home Dashboard Synchronization
+  // Dashboard Active Date
   selectedHomeDate: string;
   setSelectedHomeDate: (date: string) => void;
   resetHomeDateToToday: () => void;
@@ -26,26 +28,50 @@ interface AppState {
   // Transactions
   transactions: Transaction[];
   setTransactions: (transactions: Transaction[]) => void;
-  addTransaction: (tx: Omit<Transaction, "id" | "createdAt">) => Promise<void>;
-  updateTransaction: (id: string, updates: Partial<Omit<Transaction, "id">>) => Promise<void>;
+  addTransaction: (tx: CreateTransactionInput) => Promise<Transaction>;
+  updateTransaction: (id: string, updates: UpdateTransactionInput) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
+
+  // Modals & Edit Flow
+  isAddModalOpen: boolean;
+  activeAddType: "expense" | "income";
+  editingTransaction: Transaction | null;
+  prefilledDate: string | null;
+  prefilledNote: string | null;
+  openAddModal: (type?: "expense" | "income", date?: string, note?: string) => void;
+  openEditModal: (tx: Transaction) => void;
+  closeAddModal: () => void;
+
+  // Calendar Overlay Modal
+  isCalendarModalOpen: boolean;
+  openCalendarModal: () => void;
+  closeCalendarModal: () => void;
 
   // Filters
   filters: FilterState;
   setFilters: (filters: Partial<FilterState>) => void;
   resetFilters: () => void;
 
-  // Modals & UI State
-  isAddModalOpen: boolean;
-  activeAddType: "expense" | "income";
-  openAddModal: (type?: "expense" | "income") => void;
-  closeAddModal: () => void;
-
   // Theme
   isDarkMode: boolean;
   toggleDarkMode: () => void;
 
-  // Derived Calculations
+  // Offline & Synchronization
+  isOnline: boolean;
+  isSyncing: boolean;
+  setIsOnline: (online: boolean) => void;
+  syncPendingQueue: () => Promise<void>;
+
+  // Derived Financial Computations (in integer Paise)
+  getBalancePaise: () => number;
+  getTotalIncomePaise: () => number;
+  getTotalExpensePaise: () => number;
+  getSpentForDatePaise: (date: string) => number;
+  getSpentTodayPaise: () => number;
+  getDailyBudgetForDatePaise: (date?: string) => number;
+  getMonthlySpentPaise: (monthStr?: string) => number;
+
+  // Compatibility aliases
   getBalance: () => number;
   getTotalIncome: () => number;
   getTotalExpense: () => number;
@@ -56,27 +82,65 @@ interface AppState {
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
-      user: null, // Start unauthenticated so LoginScreen displays initially
-      setUser: (user) => set({ user }),
+      user: null,
+      setUser: (user) => {
+        // Normalize legacy properties if user profile is loaded
+        if (user) {
+          let dailyLimitPaise = user.dailyLimitPaise !== undefined 
+            ? user.dailyLimitPaise 
+            : Math.round((user.dailyLimit || 150) * 100);
+          if (dailyLimitPaise > 0 && dailyLimitPaise < 1000) {
+            dailyLimitPaise = Math.round(dailyLimitPaise * 100);
+          }
+
+          let monthlyBudgetPaise = user.monthlyBudgetPaise !== undefined
+            ? user.monthlyBudgetPaise
+            : Math.round((user.monthlyBudget || 4500) * 100);
+          if (monthlyBudgetPaise > 0 && monthlyBudgetPaise < 10000) {
+            monthlyBudgetPaise = Math.round(monthlyBudgetPaise * 100);
+          }
+
+          const dailyBudgetHistory: Record<string, number> = {};
+          if (user.dailyBudgetHistory) {
+            for (const [d, v] of Object.entries(user.dailyBudgetHistory)) {
+              dailyBudgetHistory[d] = (v > 0 && v < 1000) ? Math.round(v * 100) : Math.round(v);
+            }
+          }
+
+          set({
+            user: {
+              ...user,
+              dailyLimitPaise,
+              monthlyBudgetPaise,
+              dailyBudgetHistory,
+              timezone: user.timezone || "Asia/Kolkata",
+              currency: "INR",
+            },
+          });
+        } else {
+          set({ user: null });
+        }
+      },
 
       selectedHomeDate: getLocalDateString(),
       setSelectedHomeDate: (date) => set({ selectedHomeDate: date }),
       resetHomeDateToToday: () => set({ selectedHomeDate: getLocalDateString() }),
 
-      updateDailyLimit: async (limit) => {
+      updateDailyLimit: async (limitPaise) => {
         const currentUser = get().user;
         const todayStr = getLocalDateString();
+        const cleanPaise = Math.round(limitPaise);
 
         set((state) => {
           if (!state.user) return { user: null };
           const updatedHistory = {
             ...(state.user.dailyBudgetHistory || {}),
-            [todayStr]: limit,
+            [todayStr]: cleanPaise,
           };
           return {
             user: {
               ...state.user,
-              dailyLimit: limit,
+              dailyLimitPaise: cleanPaise,
               dailyBudgetHistory: updatedHistory,
             },
           };
@@ -84,22 +148,23 @@ export const useAppStore = create<AppState>()(
 
         if (currentUser?.uid) {
           try {
-            await UserRepository.updateDailyLimit(currentUser.uid, limit);
-            await UserRepository.saveDailyBudgetSnapshot(currentUser.uid, todayStr, limit);
+            await UserRepository.updateDailyLimit(currentUser.uid, cleanPaise);
+            await UserRepository.saveDailyBudgetSnapshot(currentUser.uid, todayStr, cleanPaise);
           } catch (err) {
             console.error("Firestore sync error on updateDailyLimit:", err);
           }
         }
       },
 
-      updateMonthlyBudget: async (budget) => {
+      updateMonthlyBudget: async (budgetPaise) => {
         const currentUser = get().user;
+        const cleanPaise = Math.round(budgetPaise);
         set((state) => ({
-          user: state.user ? { ...state.user, monthlyBudget: budget } : null,
+          user: state.user ? { ...state.user, monthlyBudgetPaise: cleanPaise } : null,
         }));
         if (currentUser?.uid) {
           try {
-            await UserRepository.updateMonthlyBudget(currentUser.uid, budget);
+            await UserRepository.updateMonthlyBudget(currentUser.uid, cleanPaise);
           } catch (err) {
             console.error("Firestore sync error on updateMonthlyBudget:", err);
           }
@@ -107,78 +172,98 @@ export const useAppStore = create<AppState>()(
       },
 
       transactions: [],
-      setTransactions: (transactions) => set({ transactions }),
-
-      addTransaction: async (tx) => {
-        const currentUser = get().user;
-        const tempId = `tx-${Date.now()}`;
-        const createdAt = new Date().toISOString();
-        const newTx: Transaction = {
+      setTransactions: (rawTransactions) => {
+        // Automatically migrate any legacy records loaded from Firestore or older versions
+        const normalized = rawTransactions.map((tx) => ({
           ...tx,
-          id: tempId,
-          userId: currentUser?.uid || "guest",
-          createdAt,
-        };
+          amountPaise: tx.amountPaise !== undefined ? tx.amountPaise : Math.round((tx.amount || 0) * 100),
+          syncStatus: tx.syncStatus || "synced",
+        }));
+        set({ transactions: normalized });
+      },
 
-        // Optimistic UI update
+      addTransaction: async (input) => {
+        const currentUser = get().user;
+        const userId = currentUser?.uid || "guest";
+
+        // Create transaction via service (enqueues & synchronizes)
+        const newTx = await TransactionService.createTransaction(userId, input);
+
+        // Optimistically update local store and reflect chosen date on daily dashboard
         set((state) => ({
           transactions: [newTx, ...state.transactions],
+          selectedHomeDate: input.date,
         }));
 
-        if (currentUser?.uid) {
-          try {
-            const inserted = await TransactionRepository.addTransaction(newTx);
-            set((state) => ({
-              transactions: state.transactions.map((t) =>
-                t.id === tempId ? inserted : t
-              ),
-            }));
-          } catch (err) {
-            console.error("Firestore sync error on addTransaction:", err);
-          }
-        }
+        return newTx;
       },
 
       updateTransaction: async (id, updates) => {
+        const currentUser = get().user;
+        const userId = currentUser?.uid || "guest";
+
+        // Optimistic store update
         set((state) => ({
           transactions: state.transactions.map((t) =>
-            t.id === id ? { ...t, ...updates } : t
+            t.id === id ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t
           ),
+          ...(updates.date ? { selectedHomeDate: updates.date } : {}),
         }));
-        try {
-          await TransactionRepository.updateTransaction(id, updates);
-        } catch (err) {
-          console.error("Firestore sync error on updateTransaction:", err);
-        }
+
+        await TransactionService.updateTransaction(userId, id, updates);
       },
 
       deleteTransaction: async (id) => {
         const currentUser = get().user;
-        console.log(`[useAppStore] deleteTransaction called for ID: "${id}". Current User UID: "${currentUser?.uid || "none"}"`);
+        const userId = currentUser?.uid || "guest";
 
-        // If authenticated and real Firestore doc ID (not optimistic temp ID)
-        if (currentUser?.uid && !id.startsWith("tx-")) {
-          try {
-            console.log(`[useAppStore] Sending delete request to Firestore for ID: "${id}"...`);
-            await TransactionRepository.deleteTransaction(id);
-            console.log(`[useAppStore] ✅ Firestore confirmed deletion for ID: "${id}"`);
-          } catch (err) {
-            console.error(`[useAppStore] ❌ Firestore deletion FAILED for ID: "${id}":`, err);
-            throw err; // Re-throw so caller (UI) can display error and preserve state
-          }
-        } else if (id.startsWith("tx-")) {
-          console.log(`[useAppStore] ℹ️ ID "${id}" is a temporary local ID. Skipping Firestore network call.`);
-        } else {
-          console.log(`[useAppStore] ℹ️ User not logged in. Deleting ID "${id}" from local state only.`);
-        }
-
-        // Deletion confirmed by Firestore (or local temp/guest item) -> update local state
+        // Filter out optimistically
         set((state) => ({
           transactions: state.transactions.filter((t) => t.id !== id),
         }));
-        console.log(`[useAppStore] ✅ Local Zustand state updated. Removed ID "${id}".`);
+
+        try {
+          await TransactionService.deleteTransaction(userId, id);
+        } catch (err) {
+          console.error("Failed to delete transaction:", err);
+          throw err;
+        }
       },
 
+      // Modal management
+      isAddModalOpen: false,
+      activeAddType: "expense",
+      editingTransaction: null,
+      prefilledDate: null,
+      prefilledNote: null,
+
+      openAddModal: (type = "expense", date, note) =>
+        set({
+          isAddModalOpen: true,
+          activeAddType: type,
+          editingTransaction: null,
+          prefilledDate: date || get().selectedHomeDate || getLocalDateString(),
+          prefilledNote: note || null,
+        }),
+
+      openEditModal: (tx) =>
+        set({
+          isAddModalOpen: true,
+          activeAddType: tx.type,
+          editingTransaction: tx,
+          prefilledDate: tx.date,
+          prefilledNote: null,
+        }),
+
+      closeAddModal: () =>
+        set({ isAddModalOpen: false, editingTransaction: null, prefilledDate: null, prefilledNote: null }),
+
+      // Calendar Overlay Modal
+      isCalendarModalOpen: false,
+      openCalendarModal: () => set({ isCalendarModalOpen: true }),
+      closeCalendarModal: () => set({ isCalendarModalOpen: false }),
+
+      // Filters
       filters: {
         searchQuery: "",
         type: "all",
@@ -196,12 +281,7 @@ export const useAppStore = create<AppState>()(
           filters: { searchQuery: "", type: "all", period: "all", category: "all" },
         }),
 
-      isAddModalOpen: false,
-      activeAddType: "expense",
-      openAddModal: (type = "expense") =>
-        set({ isAddModalOpen: true, activeAddType: type }),
-      closeAddModal: () => set({ isAddModalOpen: false }),
-
+      // Theme
       isDarkMode: false,
       toggleDarkMode: () =>
         set((state) => {
@@ -216,42 +296,111 @@ export const useAppStore = create<AppState>()(
           return { isDarkMode: nextMode };
         }),
 
-      // Derived Summary Logic (Always Balance = Total Income - Total Expense)
-      getTotalIncome: () => {
+      // Sync & Connectivity
+      isOnline: typeof navigator !== "undefined" ? navigator.onLine : true,
+      isSyncing: false,
+      setIsOnline: (online) => set({ isOnline: online }),
+
+      syncPendingQueue: async () => {
+        const currentUser = get().user;
+        if (!currentUser?.uid) return;
+        set({ isSyncing: true });
+        try {
+          await TransactionService.processQueue(currentUser.uid);
+          // Refresh transactions from repository
+          const txs = await UserRepository.getUserProfile(currentUser.uid);
+          if (txs) {
+            set((state) => ({
+              transactions: state.transactions.map((t) => ({ ...t, syncStatus: "synced" })),
+            }));
+          }
+        } catch (err) {
+          console.error("Error syncing pending queue:", err);
+        } finally {
+          set({ isSyncing: false });
+        }
+      },
+
+      // Derived Computations in integer Paise
+      getTotalIncomePaise: () => {
         return get()
           .transactions.filter((t) => t.type === "income")
-          .reduce((sum, t) => sum + t.amount, 0);
+          .reduce((sum, t) => sum + t.amountPaise, 0);
       },
 
-      getTotalExpense: () => {
+      getTotalExpensePaise: () => {
         return get()
           .transactions.filter((t) => t.type === "expense")
-          .reduce((sum, t) => sum + t.amount, 0);
+          .reduce((sum, t) => sum + t.amountPaise, 0);
       },
 
-      getBalance: () => {
-        return get().getTotalIncome() - get().getTotalExpense();
+      getBalancePaise: () => {
+        return get().getTotalIncomePaise() - get().getTotalExpensePaise();
       },
 
-      getSpentToday: () => {
-        const today = getLocalDateString();
+      getSpentForDatePaise: (dateString: string) => {
         return get()
-          .transactions.filter((t) => t.type === "expense" && t.date === today)
-          .reduce((sum, t) => sum + t.amount, 0);
+          .transactions.filter((t) => t.type === "expense" && t.date === dateString)
+          .reduce((sum, t) => sum + t.amountPaise, 0);
       },
 
+      getSpentTodayPaise: () => {
+        const today = getLocalDateString();
+        return get().getSpentForDatePaise(today);
+      },
+
+      getDailyBudgetForDatePaise: (dateString?: string) => {
+        const targetDate = dateString || get().selectedHomeDate || getLocalDateString();
+        const user = get().user;
+        return BudgetService.resolveDailyBudgetForDate({
+          date: targetDate,
+          history: user?.dailyBudgetHistory || {},
+          currentDailyLimitPaise: user?.dailyLimitPaise || BudgetService.DEFAULT_DAILY_LIMIT_PAISE,
+        });
+      },
+
+      getMonthlySpentPaise: (monthStr?: string) => {
+        const targetMonth = monthStr || getCurrentMonthString();
+        return get()
+          .transactions.filter((t) => t.type === "expense" && t.date.startsWith(targetMonth))
+          .reduce((sum, t) => sum + t.amountPaise, 0);
+      },
+
+      // Legacy compatibility getters (returning paise)
+      getBalance: () => get().getBalancePaise(),
+      getTotalIncome: () => get().getTotalIncomePaise(),
+      getTotalExpense: () => get().getTotalExpensePaise(),
+      getSpentToday: () => get().getSpentTodayPaise(),
       getRemainingDailyLimit: () => {
-        const limit = get().user?.dailyLimit || 150;
-        return limit - get().getSpentToday();
+        const budget = get().getDailyBudgetForDatePaise();
+        const spent = get().getSpentTodayPaise();
+        return Math.max(0, budget - spent);
       },
     }),
     {
-      name: "expense-tracker-storage-v3",
+      name: "expense-tracker-storage-v4",
       partialize: (state) => ({
         user: state.user,
         transactions: state.transactions,
         isDarkMode: state.isDarkMode,
       }),
+      onRehydrateStorage: () => (state) => {
+        if (state?.user) {
+          if (state.user.dailyLimitPaise && state.user.dailyLimitPaise > 0 && state.user.dailyLimitPaise < 1000) {
+            state.user.dailyLimitPaise = Math.round(state.user.dailyLimitPaise * 100);
+          }
+          if (state.user.monthlyBudgetPaise && state.user.monthlyBudgetPaise > 0 && state.user.monthlyBudgetPaise < 10000) {
+            state.user.monthlyBudgetPaise = Math.round(state.user.monthlyBudgetPaise * 100);
+          }
+          if (state.user.dailyBudgetHistory) {
+            for (const [k, v] of Object.entries(state.user.dailyBudgetHistory)) {
+              if (v > 0 && v < 1000) {
+                state.user.dailyBudgetHistory[k] = Math.round(v * 100);
+              }
+            }
+          }
+        }
+      },
     }
   )
 );

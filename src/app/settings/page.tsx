@@ -1,47 +1,55 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import { Header } from "@/components/common/Header";
 import { useAppStore } from "@/stores/useAppStore";
 import { exportTransactionsToCSV } from "@/lib/export-csv";
-import { formatCurrency } from "@/lib/utils";
+import { formatPaiseToINR, paiseToRupees, rupeesToPaise } from "@/lib/money";
 import { signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { 
-  User, 
   Target, 
+  Calendar, 
   Download, 
   Moon, 
-  Sun, 
   Info, 
-  Check, 
-  Edit3,
-  Smartphone,
-  LogOut
+  Code, 
+  Layers, 
+  ChevronRight,
+  LogOut,
+  X
 } from "lucide-react";
 
 export default function SettingsPage() {
   const { user, setUser, updateDailyLimit, updateMonthlyBudget, transactions, isDarkMode, toggleDarkMode } = useAppStore();
+
   const [isEditingLimit, setIsEditingLimit] = useState(false);
-  const [newLimit, setNewLimit] = useState(user?.dailyLimit ? user.dailyLimit.toString() : "150");
+  const [newLimitRupees, setNewLimitRupees] = useState(() =>
+    user?.dailyLimitPaise ? paiseToRupees(user.dailyLimitPaise).toString() : "150"
+  );
 
   const [isEditingMonthly, setIsEditingMonthly] = useState(false);
-  const [newMonthlyBudget, setNewMonthlyBudget] = useState(user?.monthlyBudget ? user.monthlyBudget.toString() : "4500");
+  const [newMonthlyBudgetRupees, setNewMonthlyBudgetRupees] = useState(() =>
+    user?.monthlyBudgetPaise ? paiseToRupees(user.monthlyBudgetPaise).toString() : "4500"
+  );
 
-  const handleSaveLimit = (e: React.FormEvent) => {
+  const [showSignOutPrompt, setShowSignOutPrompt] = useState(false);
+
+  const handleSaveLimit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const val = parseFloat(newLimit);
+    const val = parseFloat(newLimitRupees);
     if (!isNaN(val) && val >= 10) {
-      updateDailyLimit(val);
+      await updateDailyLimit(rupeesToPaise(val));
       setIsEditingLimit(false);
     }
   };
 
-  const handleSaveMonthly = (e: React.FormEvent) => {
+  const handleSaveMonthly = async (e: React.FormEvent) => {
     e.preventDefault();
-    const val = parseFloat(newMonthlyBudget);
+    const val = parseFloat(newMonthlyBudgetRupees);
     if (!isNaN(val) && val >= 100) {
-      updateMonthlyBudget(val);
+      await updateMonthlyBudget(rupeesToPaise(val));
       setIsEditingMonthly(false);
     }
   };
@@ -50,194 +58,360 @@ export default function SettingsPage() {
     try {
       await signOut(auth);
     } catch (e) {
-      console.error(e);
+      console.error("Sign out error:", e);
     }
     setUser(null);
   };
 
+  const userInitial = user?.name ? user.name.trim().charAt(0).toUpperCase() : "D";
+
   return (
-    <div className="space-y-4 pb-8">
+    <div className="space-y-3.5 pb-8">
       <Header />
 
-      <div className="px-5 space-y-4">
-        <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
+      {/* Page Title in Main Content Section */}
+      <div className="px-5">
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
           Settings
-        </h2>
+        </h1>
+      </div>
 
+      <div className="px-5 space-y-3">
         {/* Profile Card */}
-        <div className="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <div className="w-14 h-14 rounded-2xl bg-indigo-600 flex items-center justify-center text-white font-black text-xl shadow-md shadow-indigo-500/20 overflow-hidden">
+        <div
+          onClick={() => setShowSignOutPrompt(true)}
+          className="rounded-2xl bg-white dark:bg-[#12171f] border border-slate-200/80 dark:border-[#1d2633] p-3.5 flex items-center justify-between cursor-pointer hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-xs"
+        >
+          <div className="flex items-center">
+            {/* Avatar Circle */}
+            <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-[#18202a] border border-slate-200 dark:border-[#222d3b] text-slate-800 dark:text-white font-bold text-sm flex items-center justify-center shrink-0 mr-3 overflow-hidden relative">
               {user?.photoURL ? (
-                <img src={user.photoURL} alt={user.name} className="w-full h-full object-cover" />
+                <Image
+                  src={user.photoURL}
+                  alt={user.name || "User Avatar"}
+                  fill
+                  sizes="40px"
+                  className="object-cover"
+                  unoptimized
+                />
               ) : (
-                <User className="w-7 h-7" />
+                <span>{userInitial}</span>
               )}
             </div>
+
             <div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
-                {user?.name || "Personal Account"}
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white leading-tight">
+                {user?.name || "Devu Devu"}
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">{user?.email || "cezan@example.com"}</p>
+              <p className="text-xs text-slate-500 dark:text-[#8e9aa8] leading-tight mt-0.5">
+                {user?.email || "sunuhacker@gmail.com"}
+              </p>
             </div>
           </div>
 
-          <button
-            onClick={handleSignOut}
-            className="p-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/50 active:bg-rose-100 dark:active:bg-rose-900/60 transition-colors"
-            title="Sign Out"
+          <ChevronRight className="w-4 h-4 text-slate-400" />
+        </div>
+
+        {/* Budget Settings Section */}
+        <div className="space-y-2.5">
+          {/* Daily Spending Limit Item */}
+          <div
+            onClick={() => {
+              setNewLimitRupees(
+                user?.dailyLimitPaise ? paiseToRupees(user.dailyLimitPaise).toString() : "150"
+              );
+              setIsEditingLimit(true);
+            }}
+            className="rounded-2xl bg-white dark:bg-[#12171f] border border-slate-200/80 dark:border-[#1d2633] p-3.5 flex items-center justify-between cursor-pointer hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-xs"
           >
-            <LogOut className="w-4 h-4" />
-          </button>
-        </div>
+            <div className="flex items-center">
+              <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-[#18202a] border border-slate-200/80 dark:border-[#222d3b] flex items-center justify-center text-slate-700 dark:text-slate-300 mr-3 shrink-0">
+                <Target className="w-4 h-4 stroke-[2]" />
+              </div>
 
-        {/* Daily Spending Limit Form */}
-        <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Target className="w-4 h-4 text-indigo-500" />
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                Daily Spending Limit
-              </span>
+              <div>
+                <span className="text-xs text-slate-500 dark:text-[#8e9aa8] font-medium block leading-tight">
+                  Daily Spending Limit
+                </span>
+                <span className="text-sm font-bold text-slate-900 dark:text-white block leading-tight mt-0.5">
+                  {formatPaiseToINR(user?.dailyLimitPaise || 15000)}
+                </span>
+              </div>
             </div>
-            {!isEditingLimit && (
-              <button
-                onClick={() => setIsEditingLimit(true)}
-                className="text-xs font-bold text-indigo-500 active:opacity-75 flex items-center gap-1"
-              >
-                <Edit3 className="w-3 h-3" /> Edit
-              </button>
-            )}
+
+            <ChevronRight className="w-4 h-4 text-slate-400" />
           </div>
 
-          {isEditingLimit ? (
-            <form onSubmit={handleSaveLimit} className="flex gap-2 pt-1">
-              <input
-                type="number"
-                value={newLimit}
-                onChange={(e) => setNewLimit(e.target.value)}
-                className="flex-1 px-3 py-2 text-sm font-bold rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="Enter limit"
-              />
-              <button
-                type="submit"
-                className="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold shadow-sm active:bg-indigo-700"
-              >
-                Save
-              </button>
-            </form>
-          ) : (
-            <p className="text-2xl font-black text-slate-900 dark:text-slate-50">
-              {formatCurrency(user?.dailyLimit || 150)}
-            </p>
-          )}
-        </div>
+          {/* Monthly Target Budget Item */}
+          <div
+            onClick={() => {
+              setNewMonthlyBudgetRupees(
+                user?.monthlyBudgetPaise ? paiseToRupees(user.monthlyBudgetPaise).toString() : "4500"
+              );
+              setIsEditingMonthly(true);
+            }}
+            className="rounded-2xl bg-white dark:bg-[#12171f] border border-slate-200/80 dark:border-[#1d2633] p-3.5 flex items-center justify-between cursor-pointer hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-xs"
+          >
+            <div className="flex items-center">
+              <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-[#18202a] border border-slate-200/80 dark:border-[#222d3b] flex items-center justify-center text-slate-700 dark:text-slate-300 mr-3 shrink-0">
+                <Calendar className="w-4 h-4 stroke-[2]" />
+              </div>
 
-        {/* Monthly Budget Target Form */}
-        <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <Target className="w-4 h-4 text-emerald-500" />
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-                Monthly Target Budget
-              </span>
+              <div>
+                <span className="text-xs text-slate-500 dark:text-[#8e9aa8] font-medium block leading-tight">
+                  Monthly Target Budget
+                </span>
+                <span className="text-sm font-bold text-slate-900 dark:text-white block leading-tight mt-0.5">
+                  {formatPaiseToINR(user?.monthlyBudgetPaise || 450000)}
+                </span>
+              </div>
             </div>
-            {!isEditingMonthly && (
-              <button
-                onClick={() => setIsEditingMonthly(true)}
-                className="text-xs font-bold text-emerald-500 active:opacity-75 flex items-center gap-1"
-              >
-                <Edit3 className="w-3 h-3" /> Edit
-              </button>
-            )}
-          </div>
 
-          {isEditingMonthly ? (
-            <form onSubmit={handleSaveMonthly} className="flex gap-2 pt-1">
-              <input
-                type="number"
-                value={newMonthlyBudget}
-                onChange={(e) => setNewMonthlyBudget(e.target.value)}
-                className="flex-1 px-3 py-2 text-sm font-bold rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                placeholder="Enter monthly target"
-              />
-              <button
-                type="submit"
-                className="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold shadow-sm active:bg-emerald-700"
-              >
-                Save
-              </button>
-            </form>
-          ) : (
-            <p className="text-2xl font-black text-slate-900 dark:text-slate-50">
-              {formatCurrency(user?.monthlyBudget || 4500)}
-            </p>
-          )}
+            <ChevronRight className="w-4 h-4 text-slate-400" />
+          </div>
         </div>
 
-        {/* Preferences Section */}
-        <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-4">
-          <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+        {/* Preferences & Data Section */}
+        <div className="space-y-2 pt-1">
+          <h4 className="text-xs font-bold text-slate-900 dark:text-white tracking-tight">
             Preferences & Data
           </h4>
 
-          {/* Export CSV */}
-          <button
+          {/* Export Transactions CSV */}
+          <div
             onClick={() => exportTransactionsToCSV(transactions)}
-            className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 active:bg-slate-200/80 dark:active:bg-slate-800 transition-colors text-left"
+            className="rounded-2xl bg-white dark:bg-[#12171f] border border-slate-200/80 dark:border-[#1d2633] p-3.5 flex items-center justify-between cursor-pointer hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-xs"
           >
-            <div className="flex items-center space-x-3">
-              <Download className="w-4 h-4 text-emerald-500" />
+            <div className="flex items-center">
+              <Download className="w-4 h-4 text-slate-400 mr-3 shrink-0" />
               <div>
-                <p className="text-xs font-bold text-slate-900 dark:text-slate-100">Export Transactions CSV</p>
-                <p className="text-[10px] text-slate-400">Download complete financial log</p>
+                <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white block leading-tight">
+                  Export Transactions CSV
+                </span>
+                <span className="text-[11px] text-slate-500 dark:text-[#8e9aa8] block leading-tight mt-0.5">
+                  Download complete financial log
+                </span>
               </div>
             </div>
-            <span className="text-xs font-bold text-slate-400">.CSV</span>
-          </button>
 
-          {/* Theme Toggle */}
-          <button
-            onClick={toggleDarkMode}
-            className="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/50 active:bg-slate-200/80 dark:active:bg-slate-800 transition-colors text-left"
-          >
-            <div className="flex items-center space-x-3">
-              {isDarkMode ? (
-                <Sun className="w-4 h-4 text-amber-400" />
-              ) : (
-                <Moon className="w-4 h-4 text-slate-600" />
-              )}
-              <div>
-                <p className="text-xs font-bold text-slate-900 dark:text-slate-100">Dark Mode</p>
-                <p className="text-[10px] text-slate-400">Switch theme appearance</p>
-              </div>
-            </div>
-            <span className="text-xs font-bold text-slate-400">{isDarkMode ? "On" : "Off"}</span>
-          </button>
-        </div>
-
-        {/* PWA & System Information */}
-        <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm space-y-3">
-          <div className="flex items-center space-x-2 text-xs font-semibold text-slate-500 uppercase tracking-wide">
-            <Info className="w-4 h-4 text-blue-600" /> Application Details
+            <ChevronRight className="w-4 h-4 text-slate-400" />
           </div>
 
-          <div className="space-y-2 text-xs">
-            <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
-              <span className="text-slate-500">App Name</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100">Personal Expense Tracker PWA</span>
+          {/* Dark Mode Toggle */}
+          <div
+            onClick={toggleDarkMode}
+            className="rounded-2xl bg-white dark:bg-[#12171f] border border-slate-200/80 dark:border-[#1d2633] p-3.5 flex items-center justify-between cursor-pointer hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-xs"
+          >
+            <div className="flex items-center">
+              <Moon className="w-4 h-4 text-slate-400 mr-3 shrink-0" />
+              <div>
+                <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white block leading-tight">
+                  Dark Mode
+                </span>
+                <span className="text-[11px] text-slate-500 dark:text-[#8e9aa8] block leading-tight mt-0.5">
+                  Switch theme appearance
+                </span>
+              </div>
             </div>
-            <div className="flex justify-between py-1 border-b border-slate-100 dark:border-slate-800">
-              <span className="text-slate-500">Version</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100">1.0.0 (PWA Ready)</span>
+
+            {/* iOS Style Emerald Switch Toggle */}
+            <div
+              className={`w-11 h-6 rounded-full transition-colors relative p-0.5 ${
+                isDarkMode ? "bg-emerald-500" : "bg-slate-300"
+              }`}
+            >
+              <div
+                className={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform duration-200 ${
+                  isDarkMode ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
             </div>
-            <div className="flex justify-between py-1">
-              <span className="text-slate-500">Framework</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100">Next.js 16 (App Router)</span>
+          </div>
+        </div>
+
+        {/* Application Details Section */}
+        <div className="space-y-2 pt-1">
+          <h4 className="text-xs font-bold text-slate-900 dark:text-white tracking-tight">
+            Application Details
+          </h4>
+
+          <div className="rounded-2xl bg-white dark:bg-[#12171f] border border-slate-200/80 dark:border-[#1d2633] p-3.5 divide-y divide-slate-100 dark:divide-[#1d2633] shadow-xs">
+            <div className="flex items-center justify-between py-2 first:pt-0">
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2">
+                <Info className="w-4 h-4 text-slate-400" /> App Name
+              </span>
+              <span className="text-xs text-slate-500 dark:text-[#8e9aa8] font-medium">
+                Personal Expense Tracker PWA
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between py-2">
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2">
+                <Code className="w-4 h-4 text-slate-400" /> Version
+              </span>
+              <span className="text-xs text-slate-500 dark:text-[#8e9aa8] font-medium">
+                2.0.0 (PWA Ready)
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between py-2 last:pb-0">
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2">
+                <Layers className="w-4 h-4 text-slate-400" /> Framework
+              </span>
+              <span className="text-xs text-slate-500 dark:text-[#8e9aa8] font-medium">
+                Next.js 16 (App Router)
+              </span>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Daily Limit Edit Modal */}
+      {isEditingLimit && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-5">
+          <div className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#12171f] border border-slate-200 dark:border-[#1d2633] p-5 space-y-4 shadow-xl">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                Edit Daily Spending Limit
+              </h3>
+              <button
+                onClick={() => setIsEditingLimit(false)}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveLimit} className="space-y-4">
+              <div>
+                <label className="text-xs font-medium text-slate-500 dark:text-[#8e9aa8] block mb-1.5">
+                  Amount in ₹
+                </label>
+                <input
+                  type="number"
+                  min="10"
+                  step="1"
+                  value={newLimitRupees}
+                  onChange={(e) => setNewLimitRupees(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-[#18202a] border border-slate-200 dark:border-[#222d3b] text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-slate-400"
+                  placeholder="e.g. 150"
+                  autoFocus
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsEditingLimit(false)}
+                  className="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-[#18202a] text-slate-700 dark:text-slate-300 font-bold text-xs"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-black font-bold text-xs shadow-sm"
+                >
+                  Save Limit
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Monthly Budget Edit Modal */}
+      {isEditingMonthly && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-5">
+          <div className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#12171f] border border-slate-200 dark:border-[#1d2633] p-5 space-y-4 shadow-xl">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                Edit Monthly Target Budget
+              </h3>
+              <button
+                onClick={() => setIsEditingMonthly(false)}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveMonthly} className="space-y-4">
+              <div>
+                <label className="text-xs font-medium text-slate-500 dark:text-[#8e9aa8] block mb-1.5">
+                  Amount in ₹
+                </label>
+                <input
+                  type="number"
+                  min="100"
+                  step="1"
+                  value={newMonthlyBudgetRupees}
+                  onChange={(e) => setNewMonthlyBudgetRupees(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-[#18202a] border border-slate-200 dark:border-[#222d3b] text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-slate-400"
+                  placeholder="e.g. 4500"
+                  autoFocus
+                />
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsEditingMonthly(false)}
+                  className="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-[#18202a] text-slate-700 dark:text-slate-300 font-bold text-xs"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 py-2.5 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-black font-bold text-xs shadow-sm"
+                >
+                  Save Budget
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Sign Out Confirmation Modal */}
+      {showSignOutPrompt && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-5">
+          <div className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#12171f] border border-slate-200 dark:border-[#1d2633] p-5 space-y-4 shadow-xl">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-rose-500/15 text-rose-500">
+                <LogOut className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  Sign Out
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-[#8e9aa8] mt-0.5">
+                  Are you sure you want to sign out of your account?
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowSignOutPrompt(false)}
+                className="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-[#18202a] text-slate-700 dark:text-slate-300 font-bold text-xs"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowSignOutPrompt(false);
+                  handleSignOut();
+                }}
+                className="flex-1 py-2.5 rounded-xl bg-rose-500 text-white font-bold text-xs shadow-sm active:bg-rose-600"
+              >
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -5,53 +5,45 @@ import { usePathname } from "next/navigation";
 import { Download, Sparkles, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt(): Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed"; platform: string }>;
+}
+
 export function PWAInstallPrompt() {
   const pathname = usePathname();
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
   const autoDismissTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Hide prompt immediately whenever user navigates away from Home screen ("/")
-  useEffect(() => {
-    if (pathname !== "/") {
-      if (autoDismissTimerRef.current) {
-        clearTimeout(autoDismissTimerRef.current);
-      }
-      setShowPrompt(false);
-    }
-  }, [pathname]);
 
   useEffect(() => {
     // 1. Standalone / Installed Check
     const isStandalone =
-      window.matchMedia("(display-mode: standalone)").matches ||
-      (window.navigator as any).standalone === true ||
-      document.referrer.includes("android-app://");
+      typeof window !== "undefined" &&
+      (window.matchMedia("(display-mode: standalone)").matches ||
+        (window.navigator as unknown as { standalone?: boolean }).standalone === true ||
+        document.referrer.includes("android-app://"));
 
-    if (isStandalone) {
-      return;
-    }
+    if (isStandalone) return;
 
     // 2. Session Dismissal Check
-    const sessionDismissed = sessionStorage.getItem("pwa_prompt_dismissed");
-    if (sessionDismissed === "true") {
-      return;
-    }
+    const sessionDismissed = typeof window !== "undefined" && sessionStorage.getItem("pwa_prompt_dismissed");
+    if (sessionDismissed === "true") return;
 
     // 3. Listen for install eligibility
-    const handler = (e: any) => {
+    const handler = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e);
+      const installEvent = e as BeforeInstallPromptEvent;
+      setDeferredPrompt(installEvent);
 
-      // Only show if user is currently on the Home screen ("/")
       if (window.location.pathname === "/") {
         setShowPrompt(true);
 
-        // Auto-dismiss prompt after 3 seconds if un-interacted
         if (autoDismissTimerRef.current) clearTimeout(autoDismissTimerRef.current);
+        // Generous 8 second visibility window to allow user to read and interact
         autoDismissTimerRef.current = setTimeout(() => {
           setShowPrompt(false);
-        }, 2000);
+        }, 8000);
       }
     };
 
@@ -92,7 +84,7 @@ export function PWAInstallPrompt() {
     setDeferredPrompt(null);
   };
 
-  // Do not render if not on Home screen
+  // Only render on the Home screen
   if (pathname !== "/") {
     return null;
   }
@@ -128,6 +120,7 @@ export function PWAInstallPrompt() {
             <button
               onClick={handleDismiss}
               className="p-1 rounded-full text-slate-400 active:text-white"
+              aria-label="Dismiss install banner"
             >
               <X className="w-4 h-4" />
             </button>
@@ -137,5 +130,3 @@ export function PWAInstallPrompt() {
     </AnimatePresence>
   );
 }
-
-

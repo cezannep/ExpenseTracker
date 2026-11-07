@@ -3,29 +3,25 @@
 @variant dark (&:where(.dark, .dark *));
 
 :root {
-  --color-primary: #071b3a;
-  --color-primary-700: #123c73;
-  --color-primary-800: #0b2854;
-  --color-primary-900: #071b3a;
-  --color-primary-950: #031023;
-  
-  --color-accent: #14ead8;
-  --color-accent-400: #4fe5d9;
-  --color-accent-500: #24dacd;
-  --color-accent-600: #10d2c3;
-  --color-accent-700: #0cb6a8;
-  
   --background: #f8fafc;
-  --foreground: #071b3a;
+  --foreground: #0b0e14;
   --card-bg: #ffffff;
-  --card-border: #d6dce5;
+  --card-border: #e2e8f0;
+  --secondary-bg: #f1f5f9;
+  --secondary-border: #cbd5e1;
+  --accent-emerald: #10b981;
+  --accent-rose: #f43f5e;
 }
 
 .dark {
-  --background: #031023;
+  --background: #0b0e14;
   --foreground: #f8fafc;
-  --card-bg: #071b3a;
-  --card-border: #123c73;
+  --card-bg: #12171f;
+  --card-border: #1d2633;
+  --secondary-bg: #18202a;
+  --secondary-border: #222d3b;
+  --accent-emerald: #10d294;
+  --accent-rose: #f43f5e;
 }
 
 body {
@@ -42,7 +38,7 @@ body {
 }
 
 .dark .glass-panel {
-  background: rgba(7, 27, 58, 0.85);
+  background: rgba(18, 23, 31, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
@@ -57,5 +53,3 @@ body {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
 }
-
-

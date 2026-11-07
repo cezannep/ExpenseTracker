@@ -1,172 +1,271 @@
 "use client";
 
-import React from "react";
+import React, { useState, useMemo } from "react";
 import { Header } from "@/components/common/Header";
 import { useAppStore } from "@/stores/useAppStore";
-import { formatCurrency } from "@/lib/utils";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis } from "recharts";
-import { TrendingUp, PieChart as PieIcon, BarChart2, Award, Zap, Activity } from "lucide-react";
+import { formatPaiseToINR } from "@/lib/money";
+import { AnalyticsService } from "@/services/analyticsService";
+import { BudgetService } from "@/services/budgetService";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import { Bookmark, Zap } from "lucide-react";
 
-const COLORS = ["#10D2C3", "#123C73", "#4FE5D9", "#0B2854", "#0CB6A8", "#071B3A", "#24DACD", "#099287"];
+const DONUT_COLORS = ["#10D294", "#34D399", "#94A3B8", "#475569", "#38BDF8", "#F43F5E", "#A855F7"];
 
 export default function AnalyticsPage() {
-  const { transactions, getBalance, getTotalIncome, getTotalExpense } = useAppStore();
+  const { transactions, user, getMonthlySpentPaise } = useAppStore();
+  const [timeRange, setTimeRange] = useState<"month" | "last_month" | "year">("month");
 
-  const balance = getBalance();
-  const income = getTotalIncome();
-  const expense = getTotalExpense();
+  // Filter transactions by selected range
+  const filteredTransactions = useMemo(() => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth(); // 0-indexed
 
-  // Category breakdown for pie chart
-  const categoryData = React.useMemo(() => {
-    const expenses = transactions.filter((t) => t.type === "expense");
-    const map: Record<string, number> = {};
-    expenses.forEach((t) => {
-      map[t.category] = (map[t.category] || 0) + t.amount;
+    return transactions.filter((tx) => {
+      if (!tx.date) return false;
+      const [y, m] = tx.date.split("-").map(Number);
+      if (timeRange === "month") {
+        return y === currentYear && m === currentMonth + 1;
+      } else if (timeRange === "last_month") {
+        const lastMonth = currentMonth === 0 ? 12 : currentMonth;
+        const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+        return y === lastMonthYear && m === lastMonth;
+      } else {
+        return y === currentYear;
+      }
     });
+  }, [transactions, timeRange]);
 
-    return Object.keys(map).map((cat) => ({
-      name: cat,
-      value: map[cat],
+  const analytics = useMemo(() => {
+    return AnalyticsService.computeAnalytics(filteredTransactions);
+  }, [filteredTransactions]);
+
+  const monthlySpentPaise = getMonthlySpentPaise();
+  const monthlyBudgetPaise = user?.monthlyBudgetPaise || BudgetService.DEFAULT_MONTHLY_BUDGET_PAISE;
+  const monthlyProgress = useMemo(() => {
+    return BudgetService.calculateMonthlyProgress(monthlySpentPaise, monthlyBudgetPaise);
+  }, [monthlySpentPaise, monthlyBudgetPaise]);
+
+  // Donut chart items
+  const chartData = useMemo(() => {
+    if (analytics.categoryBreakdown.length === 0) {
+      return [{ name: "No expenses", value: 1, percentage: "0.0" }];
+    }
+    const total = analytics.totalExpensePaise;
+    return analytics.categoryBreakdown.slice(0, 4).map((item) => ({
+      name: item.name,
+      value: item.valuePaise,
+      percentage: total > 0 ? ((item.valuePaise / total) * 100).toFixed(1) : "0.0",
     }));
-  }, [transactions]);
+  }, [analytics.categoryBreakdown, analytics.totalExpensePaise]);
 
-  // Statistics calculations
-  const stats = React.useMemo(() => {
-    const expenses = transactions.filter((t) => t.type === "expense");
-    if (!expenses.length) return { highestDay: "N/A", mostUsedCategory: "N/A", avgDaily: 0 };
+  const totalExpensePaise = analytics.totalExpensePaise;
+  const hasExpenses = analytics.categoryBreakdown.length > 0;
 
-    // Most used category
-    const catCounts: Record<string, number> = {};
-    expenses.forEach((t) => {
-      catCounts[t.category] = (catCounts[t.category] || 0) + 1;
-    });
-    const mostUsedCat = Object.keys(catCounts).reduce((a, b) =>
-      catCounts[a] > catCounts[b] ? a : b
-    );
-
-    // Daily spending map
-    const dailyMap: Record<string, number> = {};
-    expenses.forEach((t) => {
-      dailyMap[t.date] = (dailyMap[t.date] || 0) + t.amount;
-    });
-    const highestSpendingDate = Object.keys(dailyMap).reduce((a, b) =>
-      dailyMap[a] > dailyMap[b] ? a : b
-    );
-
-    const totalDays = Object.keys(dailyMap).length || 1;
-    const avgDailySpend = Math.round(expense / totalDays);
-
-    return {
-      highestDay: highestSpendingDate,
-      mostUsedCategory: mostUsedCat,
-      avgDaily: avgDailySpend,
-    };
-  }, [transactions, expense]);
+  const isNetSavingsNegative = analytics.netSavingsPaise < 0;
+  const absNetSavings = Math.abs(analytics.netSavingsPaise);
+  const formattedNetSavings = `${isNetSavingsNegative ? "-" : ""}${formatPaiseToINR(
+    absNetSavings,
+    absNetSavings % 100 !== 0
+  )}`;
 
   return (
-    <div className="space-y-4 pb-6">
+    <div className="space-y-3.5 pb-6">
       <Header />
 
-      <div className="px-5 space-y-4">
-        <h2 className="text-xl font-bold tracking-tight text-[#071b3a] dark:text-slate-50">
+      {/* Page Title in Main Content Section */}
+      <div className="px-5">
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
           Analytics & Insights
-        </h2>
+        </h1>
+      </div>
 
-        {/* Executive Summary Card */}
-        <div className="p-5 rounded-3xl bg-[#ffffff] dark:bg-[#071b3a] border border-[#d6dce5] dark:border-[#123c73] shadow-sm space-y-3">
-          <div className="flex items-center space-x-2 text-xs font-bold text-[#071b3a]/70 dark:text-slate-300 uppercase tracking-wide">
-            <TrendingUp className="w-4 h-4 text-[#10d2c3]" /> Summary Breakdown
+      <div className="px-5 space-y-3">
+        {/* Time Range Tabs (This Month | Last Month | This Year) */}
+        <div className="flex items-center justify-between p-1 bg-slate-100 dark:bg-[#12171f] rounded-2xl border border-slate-200/80 dark:border-[#1d2633]">
+          {(
+            [
+              { id: "month", label: "This Month" },
+              { id: "last_month", label: "Last Month" },
+              { id: "year", label: "This Year" },
+            ] as const
+          ).map((t) => {
+            const isActive = timeRange === t.id;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setTimeRange(t.id)}
+                className={`flex-1 py-1.5 text-xs font-semibold rounded-full transition-all ${
+                  isActive
+                    ? "bg-slate-900 text-white dark:bg-white dark:text-black font-bold shadow-xs"
+                    : "text-slate-500 dark:text-[#8e9aa8] hover:text-slate-900 dark:hover:text-white"
+                }`}
+              >
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* 3-Column Summary Card (Income | Expense | Net Savings) */}
+        <div className="rounded-2xl bg-white dark:bg-[#12171f] border border-slate-200/80 dark:border-[#1d2633] p-4 grid grid-cols-3 divide-x divide-slate-200 dark:divide-[#1d2633] text-center shadow-xs">
+          <div className="px-1">
+            <span className="text-[11px] font-medium text-slate-500 dark:text-[#8e9aa8] block mb-1">
+              Income
+            </span>
+            <span className="text-sm sm:text-base font-bold text-emerald-500 dark:text-emerald-400 block tracking-tight truncate">
+              {formatPaiseToINR(analytics.totalIncomePaise, analytics.totalIncomePaise % 100 !== 0)}
+            </span>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 text-center pt-2">
-            <div className="p-2.5 rounded-2xl bg-[#f8fafc] dark:bg-[#0b2854]">
-              <p className="text-[10px] text-slate-500 font-medium">Income</p>
-              <p className="text-xs font-extrabold text-[#10d2c3]">
-                {formatCurrency(income)}
-              </p>
-            </div>
-            <div className="p-2.5 rounded-2xl bg-[#f8fafc] dark:bg-[#0b2854]">
-              <p className="text-[10px] text-slate-500 font-medium">Expense</p>
-              <p className="text-xs font-extrabold text-rose-500 dark:text-rose-400">
-                {formatCurrency(expense)}
-              </p>
-            </div>
-            <div className="p-2.5 rounded-2xl bg-[#f8fafc] dark:bg-[#0b2854]">
-              <p className="text-[10px] text-slate-500 font-medium">Net Savings</p>
-              <p className="text-xs font-extrabold text-[#10d2c3]">
-                {formatCurrency(balance)}
-              </p>
-            </div>
+          <div className="px-1">
+            <span className="text-[11px] font-medium text-slate-500 dark:text-[#8e9aa8] block mb-1">
+              Expense
+            </span>
+            <span className="text-sm sm:text-base font-bold text-rose-500 dark:text-rose-400 block tracking-tight truncate">
+              {formatPaiseToINR(analytics.totalExpensePaise, analytics.totalExpensePaise % 100 !== 0)}
+            </span>
+          </div>
+
+          <div className="px-1">
+            <span className="text-[11px] font-medium text-slate-500 dark:text-[#8e9aa8] block mb-1">
+              Net Savings
+            </span>
+            <span className="text-sm sm:text-base font-bold text-slate-900 dark:text-white block tracking-tight truncate">
+              {formattedNetSavings}
+            </span>
           </div>
         </div>
 
-        {/* Category Breakdown Pie Chart */}
-        <div className="p-5 rounded-3xl bg-[#ffffff] dark:bg-[#071b3a] border border-[#d6dce5] dark:border-[#123c73] shadow-sm space-y-3">
-          <div className="flex items-center space-x-2 text-xs font-bold text-[#071b3a]/70 dark:text-slate-300 uppercase tracking-wide">
-            <PieIcon className="w-4 h-4 text-[#10d2c3]" /> Category Breakdown
+        {/* Monthly Target Budget Card */}
+        <div className="rounded-2xl bg-white dark:bg-[#12171f] border border-slate-200/80 dark:border-[#1d2633] p-4 space-y-2 shadow-xs">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-slate-900 dark:text-white tracking-tight">
+              Monthly Target Budget
+            </span>
+            <span className="text-xs font-bold text-slate-900 dark:text-white tracking-tight">
+              {formatPaiseToINR(monthlyBudgetPaise)}
+            </span>
           </div>
 
-          {categoryData.length ? (
-            <div className="h-56 w-full flex items-center justify-center">
+          <div className="flex items-baseline justify-between pt-0.5">
+            <div>
+              <span className="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight">
+                {formatPaiseToINR(monthlySpentPaise, monthlySpentPaise % 100 !== 0)}
+              </span>
+              <span className="text-xs text-slate-500 dark:text-[#8e9aa8] ml-1.5 font-medium">
+                spent this month
+              </span>
+            </div>
+
+            <span className="text-xs font-semibold text-emerald-500 dark:text-emerald-400">
+              {monthlyProgress.isExceeded
+                ? `Exceeded`
+                : `${formatPaiseToINR(monthlyProgress.remainingMonthPaise)} left`}
+            </span>
+          </div>
+
+          <div className="w-full h-2 bg-slate-100 dark:bg-[#18202a] rounded-full overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all ${
+                monthlyProgress.isExceeded ? "bg-rose-500" : "bg-white dark:bg-white"
+              }`}
+              style={{ width: `${Math.min(monthlyProgress.percentage, 100)}%` }}
+            />
+          </div>
+        </div>
+
+        {/* Category Breakdown Donut Chart Card */}
+        <div className="rounded-2xl bg-white dark:bg-[#12171f] border border-slate-200/80 dark:border-[#1d2633] p-4 shadow-xs">
+          <h3 className="text-xs font-bold text-slate-900 dark:text-white tracking-tight mb-2">
+            Category Breakdown
+          </h3>
+
+          <div className="grid grid-cols-2 items-center gap-3">
+            {/* Donut Chart with Centered Total */}
+            <div className="relative w-full h-36 flex items-center justify-center">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={categoryData}
+                    data={chartData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={50}
-                    outerRadius={80}
-                    paddingAngle={4}
+                    innerRadius={42}
+                    outerRadius={60}
+                    paddingAngle={hasExpenses ? 3 : 0}
                     dataKey="value"
+                    stroke="none"
                   >
-                    {categoryData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    {chartData.map((_entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={hasExpenses ? DONUT_COLORS[index % DONUT_COLORS.length] : "#334155"}
+                      />
                     ))}
                   </Pie>
-                  <Tooltip
-                    formatter={(value: any) => [formatCurrency(Number(value)), "Spent"]}
-                    contentStyle={{ borderRadius: "12px", fontSize: "12px" }}
-                  />
                 </PieChart>
               </ResponsiveContainer>
-            </div>
-          ) : (
-            <p className="text-xs text-slate-400 text-center py-6">No expenses to display chart.</p>
-          )}
 
-          {/* Legend */}
-          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-            {categoryData.slice(0, 6).map((cat, i) => (
-              <div key={cat.name} className="flex items-center space-x-2 text-xs">
-                <span
-                  className="w-2.5 h-2.5 rounded-full"
-                  style={{ backgroundColor: COLORS[i % COLORS.length] }}
-                />
-                <span className="text-slate-600 dark:text-slate-400 truncate">{cat.name}</span>
-                <span className="font-bold text-slate-900 dark:text-slate-100 ml-auto">
-                  {formatCurrency(cat.value)}
+              {/* Center Text inside Donut Ring */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white tracking-tight leading-tight">
+                  {formatPaiseToINR(totalExpensePaise, totalExpensePaise % 100 !== 0)}
+                </span>
+                <span className="text-[9px] text-slate-400 dark:text-[#8e9aa8] leading-tight mt-0.5 font-medium">
+                  Total Expense
                 </span>
               </div>
-            ))}
+            </div>
+
+            {/* Legend List */}
+            <div className="space-y-2">
+              {hasExpenses ? (
+                chartData.map((item, index) => (
+                  <div key={item.name} className="flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span
+                        className="w-2 h-2 rounded-full shrink-0"
+                        style={{ backgroundColor: DONUT_COLORS[index % DONUT_COLORS.length] }}
+                      />
+                      <span className="text-slate-800 dark:text-slate-200 font-medium truncate">
+                        {item.name}
+                      </span>
+                    </div>
+                    <span className="text-slate-500 dark:text-[#8e9aa8] font-medium ml-2 shrink-0">
+                      {item.percentage}%
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <p className="text-xs text-slate-400">No recorded expenses.</p>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Key Statistics Grid */}
+        {/* Bottom 2 Key Metric Cards */}
         <div className="grid grid-cols-2 gap-3">
-          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm">
-            <Award className="w-4 h-4 text-blue-500 mb-2" />
-            <p className="text-[10px] text-slate-400 font-semibold uppercase">Most Used Category</p>
-            <p className="text-base font-extrabold text-slate-900 dark:text-slate-100 mt-0.5">
-              {stats.mostUsedCategory}
-            </p>
+          <div className="rounded-2xl bg-white dark:bg-[#12171f] border border-slate-200/80 dark:border-[#1d2633] p-3.5 space-y-1 shadow-xs">
+            <Bookmark className="w-4 h-4 text-slate-400 mb-1" />
+            <span className="text-[11px] font-medium text-slate-500 dark:text-[#8e9aa8] block">
+              Most Used Category
+            </span>
+            <span className="text-base font-bold text-slate-900 dark:text-white block tracking-tight truncate">
+              {analytics.mostUsedCategory || "None"}
+            </span>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm">
-            <Zap className="w-4 h-4 text-amber-500 mb-2" />
-            <p className="text-[10px] text-slate-400 font-semibold uppercase">Avg Daily Spend</p>
-            <p className="text-base font-extrabold text-slate-900 dark:text-slate-100 mt-0.5">
-              {formatCurrency(stats.avgDaily)}
-            </p>
+          <div className="rounded-2xl bg-white dark:bg-[#12171f] border border-slate-200/80 dark:border-[#1d2633] p-3.5 space-y-1 shadow-xs">
+            <Zap className="w-4 h-4 text-slate-400 mb-1" />
+            <span className="text-[11px] font-medium text-slate-500 dark:text-[#8e9aa8] block">
+              Avg Daily Spend
+            </span>
+            <span className="text-base font-bold text-slate-900 dark:text-white block tracking-tight truncate">
+              {formatPaiseToINR(
+                analytics.averageDailySpendPaise,
+                analytics.averageDailySpendPaise % 100 !== 0
+              )}
+            </span>
           </div>
         </div>
       </div>

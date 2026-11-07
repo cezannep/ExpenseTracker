@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import { signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
 import { useAppStore } from "@/stores/useAppStore";
-import { Wallet, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 
 export function LoginScreen() {
@@ -18,17 +17,23 @@ export function LoginScreen() {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
+      const now = new Date().toISOString();
       setUser({
         uid: user.uid,
         name: user.displayName || "Personal Account",
         email: user.email || "",
         photoURL: user.photoURL || undefined,
-        dailyLimit: 150,
-        createdAt: new Date().toISOString(),
+        dailyLimitPaise: 15000,
+        monthlyBudgetPaise: 450000,
+        timezone: "Asia/Kolkata",
+        currency: "INR",
+        createdAt: now,
+        updatedAt: now,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Google Sign-In Error:", error);
-      setErrorMsg(error.message || "Failed to sign in with Google. Please try again.");
+      const msg = error instanceof Error ? error.message : "Failed to sign in with Google. Please try again.";
+      setErrorMsg(msg);
     } finally {
       setIsSigningIn(false);
     }
