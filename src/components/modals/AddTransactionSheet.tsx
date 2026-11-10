@@ -11,8 +11,9 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const EXPENSE_CATEGORIES: ExpenseCategory[] = [
   "Food",
-  "Travel",
+  "Petrol",
   "Shopping",
+  "Travel",
   "Medical",
   "Entertainment",
   "Bills",
