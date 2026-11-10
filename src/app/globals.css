@@ -2,6 +2,14 @@
 
 @variant dark (&:where(.dark, .dark *));
 
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button, a, [role="button"], input, select, textarea {
+  touch-action: manipulation;
+}
+
 :root {
   --background: #f8fafc;
   --foreground: #0b0e14;

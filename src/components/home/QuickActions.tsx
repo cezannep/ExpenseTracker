@@ -14,7 +14,7 @@ export function QuickActions() {
       <motion.button
         whileTap={{ scale: 0.96 }}
         onClick={() => openAddModal("expense", selectedHomeDate)}
-        className="flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl bg-slate-900 text-white dark:bg-white dark:text-black font-bold text-xs shadow-sm transition-all"
+        className="flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl bg-slate-900 text-white dark:bg-white dark:text-black font-bold text-xs shadow-sm active:opacity-90 transition-all"
       >
         <Plus className="w-4 h-4 stroke-[2.5]" />
         <span>Add Expense</span>
@@ -24,7 +24,7 @@ export function QuickActions() {
       <motion.button
         whileTap={{ scale: 0.96 }}
         onClick={() => openAddModal("income", selectedHomeDate)}
-        className="flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl bg-white dark:bg-[#12171f] border border-[#e2e8f0] dark:border-[#1d2633] text-slate-900 dark:text-white font-bold text-xs shadow-sm hover:bg-slate-50 dark:hover:bg-[#18202a] transition-all"
+        className="flex items-center justify-center gap-2 py-3.5 px-4 rounded-2xl bg-white dark:bg-[#12171f] border border-[#e2e8f0] dark:border-[#1d2633] text-slate-900 dark:text-white font-bold text-xs shadow-sm active:bg-slate-50 dark:active:bg-[#18202a] transition-all"
       >
         <ArrowUpRight className="w-4 h-4 stroke-[2.5]" />
         <span>Add Income</span>

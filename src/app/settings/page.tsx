@@ -80,7 +80,7 @@ export default function SettingsPage() {
         {/* Profile Card */}
         <div
           onClick={() => setShowSignOutPrompt(true)}
-          className="rounded-2xl bg-white dark:bg-[#12171f] border border-slate-200/80 dark:border-[#1d2633] p-3.5 flex items-center justify-between cursor-pointer hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-xs"
+          className="rounded-2xl bg-white dark:bg-[#12171f] border border-slate-200/80 dark:border-[#1d2633] p-3.5 flex items-center justify-between cursor-pointer active:bg-slate-50 dark:active:bg-[#151c27] active:scale-[0.99] transition-all shadow-xs"
         >
           <div className="flex items-center">
             {/* Avatar Circle */}
@@ -122,7 +122,7 @@ export default function SettingsPage() {
               );
               setIsEditingLimit(true);
             }}
-            className="rounded-2xl bg-white dark:bg-[#12171f] border border-slate-200/80 dark:border-[#1d2633] p-3.5 flex items-center justify-between cursor-pointer hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-xs"
+            className="rounded-2xl bg-white dark:bg-[#12171f] border border-slate-200/80 dark:border-[#1d2633] p-3.5 flex items-center justify-between cursor-pointer active:bg-slate-50 dark:active:bg-[#151c27] active:scale-[0.99] transition-all shadow-xs"
           >
             <div className="flex items-center">
               <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-[#18202a] border border-slate-200/80 dark:border-[#222d3b] flex items-center justify-center text-slate-700 dark:text-slate-300 mr-3 shrink-0">
@@ -150,7 +150,7 @@ export default function SettingsPage() {
               );
               setIsEditingMonthly(true);
             }}
-            className="rounded-2xl bg-white dark:bg-[#12171f] border border-slate-200/80 dark:border-[#1d2633] p-3.5 flex items-center justify-between cursor-pointer hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-xs"
+            className="rounded-2xl bg-white dark:bg-[#12171f] border border-slate-200/80 dark:border-[#1d2633] p-3.5 flex items-center justify-between cursor-pointer active:bg-slate-50 dark:active:bg-[#151c27] active:scale-[0.99] transition-all shadow-xs"
           >
             <div className="flex items-center">
               <div className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-[#18202a] border border-slate-200/80 dark:border-[#222d3b] flex items-center justify-center text-slate-700 dark:text-slate-300 mr-3 shrink-0">
@@ -180,7 +180,7 @@ export default function SettingsPage() {
           {/* Export Transactions CSV */}
           <div
             onClick={() => exportTransactionsToCSV(transactions)}
-            className="rounded-2xl bg-white dark:bg-[#12171f] border border-slate-200/80 dark:border-[#1d2633] p-3.5 flex items-center justify-between cursor-pointer hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-xs"
+            className="rounded-2xl bg-white dark:bg-[#12171f] border border-slate-200/80 dark:border-[#1d2633] p-3.5 flex items-center justify-between cursor-pointer active:bg-slate-50 dark:active:bg-[#151c27] active:scale-[0.99] transition-all shadow-xs"
           >
             <div className="flex items-center">
               <Download className="w-4 h-4 text-slate-400 mr-3 shrink-0" />
@@ -200,7 +200,7 @@ export default function SettingsPage() {
           {/* Dark Mode Toggle */}
           <div
             onClick={toggleDarkMode}
-            className="rounded-2xl bg-white dark:bg-[#12171f] border border-slate-200/80 dark:border-[#1d2633] p-3.5 flex items-center justify-between cursor-pointer hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-xs"
+            className="rounded-2xl bg-white dark:bg-[#12171f] border border-slate-200/80 dark:border-[#1d2633] p-3.5 flex items-center justify-between cursor-pointer active:bg-slate-50 dark:active:bg-[#151c27] active:scale-[0.99] transition-all shadow-xs"
           >
             <div className="flex items-center">
               <Moon className="w-4 h-4 text-slate-400 mr-3 shrink-0" />
@@ -276,7 +276,7 @@ export default function SettingsPage() {
               </h3>
               <button
                 onClick={() => setIsEditingLimit(false)}
-                className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white"
+                className="p-1 rounded-full text-slate-400 active:text-slate-600 dark:active:text-white active:scale-95"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -303,13 +303,13 @@ export default function SettingsPage() {
                 <button
                   type="button"
                   onClick={() => setIsEditingLimit(false)}
-                  className="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-[#18202a] text-slate-700 dark:text-slate-300 font-bold text-xs"
+                  className="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-[#18202a] text-slate-700 dark:text-slate-300 font-bold text-xs active:scale-[0.98] transition-all"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-black font-bold text-xs shadow-sm"
+                  className="flex-1 py-2.5 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-black font-bold text-xs shadow-sm active:scale-[0.98] transition-all"
                 >
                   Save Limit
                 </button>
@@ -329,7 +329,7 @@ export default function SettingsPage() {
               </h3>
               <button
                 onClick={() => setIsEditingMonthly(false)}
-                className="p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-white"
+                className="p-1 rounded-full text-slate-400 active:text-slate-600 dark:active:text-white active:scale-95"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -356,13 +356,13 @@ export default function SettingsPage() {
                 <button
                   type="button"
                   onClick={() => setIsEditingMonthly(false)}
-                  className="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-[#18202a] text-slate-700 dark:text-slate-300 font-bold text-xs"
+                  className="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-[#18202a] text-slate-700 dark:text-slate-300 font-bold text-xs active:scale-[0.98] transition-all"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-black font-bold text-xs shadow-sm"
+                  className="flex-1 py-2.5 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-black font-bold text-xs shadow-sm active:scale-[0.98] transition-all"
                 >
                   Save Budget
                 </button>
@@ -394,7 +394,7 @@ export default function SettingsPage() {
               <button
                 type="button"
                 onClick={() => setShowSignOutPrompt(false)}
-                className="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-[#18202a] text-slate-700 dark:text-slate-300 font-bold text-xs"
+                className="flex-1 py-2.5 rounded-xl bg-slate-100 dark:bg-[#18202a] text-slate-700 dark:text-slate-300 font-bold text-xs active:scale-[0.98] transition-all"
               >
                 Cancel
               </button>
@@ -404,7 +404,7 @@ export default function SettingsPage() {
                   setShowSignOutPrompt(false);
                   handleSignOut();
                 }}
-                className="flex-1 py-2.5 rounded-xl bg-rose-500 text-white font-bold text-xs shadow-sm active:bg-rose-600"
+                className="flex-1 py-2.5 rounded-xl bg-rose-500 text-white font-bold text-xs shadow-sm active:bg-rose-600 active:scale-[0.98] transition-all"
               >
                 Sign Out
               </button>

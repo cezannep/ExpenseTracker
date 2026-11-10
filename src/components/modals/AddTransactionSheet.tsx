@@ -145,7 +145,7 @@ function TransactionFormContent({ initialType, editingTransaction, initialDate, 
             setType("expense");
             if (!isEditing) setCategory("Food");
           }}
-          className={`py-2 text-xs font-bold rounded-xl transition-all ${
+          className={`py-2 text-xs font-bold rounded-xl transition-all active:scale-95 ${
             type === "expense"
               ? "bg-slate-900 text-rose-400 dark:bg-white dark:text-rose-500 shadow-sm"
               : "text-slate-500 dark:text-[#8e9aa8]"
@@ -159,7 +159,7 @@ function TransactionFormContent({ initialType, editingTransaction, initialDate, 
             setType("income");
             if (!isEditing) setCategory("Salary");
           }}
-          className={`py-2 text-xs font-bold rounded-xl transition-all ${
+          className={`py-2 text-xs font-bold rounded-xl transition-all active:scale-95 ${
             type === "income"
               ? "bg-slate-900 text-emerald-400 dark:bg-white dark:text-emerald-500 shadow-sm"
               : "text-slate-500 dark:text-[#8e9aa8]"
@@ -202,7 +202,7 @@ function TransactionFormContent({ initialType, editingTransaction, initialDate, 
                   className={`px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all shrink-0 whitespace-nowrap active:scale-95 ${
                     isSelected
                       ? "bg-slate-900 text-white dark:bg-white dark:text-black shadow-xs font-bold"
-                      : "bg-slate-50 dark:bg-[#18202a] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#222d3b] hover:border-slate-300 dark:hover:border-slate-600"
+                      : "bg-slate-50 dark:bg-[#18202a] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#222d3b]"
                   }`}
                 >
                   {cat}

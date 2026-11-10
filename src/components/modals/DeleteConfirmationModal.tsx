@@ -96,7 +96,7 @@ export function DeleteConfirmationModal({
               type="button"
               onClick={handleClose}
               disabled={isDeleting}
-              className="py-3 px-4 rounded-xl border border-[#d6dce5] dark:border-[#123c73] text-[#071b3a] dark:text-slate-300 font-bold text-xs uppercase tracking-wider active:bg-slate-100 dark:active:bg-[#0b2854] transition-all disabled:opacity-50"
+              className="py-3 px-4 rounded-xl border border-[#d6dce5] dark:border-[#123c73] text-[#071b3a] dark:text-slate-300 font-bold text-xs uppercase tracking-wider active:bg-slate-100 dark:active:bg-[#0b2854] active:scale-95 transition-all disabled:opacity-50"
             >
               Cancel
             </button>

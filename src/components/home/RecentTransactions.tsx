@@ -72,7 +72,7 @@ export function TransactionCard({ transaction, onDelete, onEdit, showDate }: Tra
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.96 }}
         onClick={handleEdit}
-        className="group p-3 rounded-2xl bg-white dark:bg-[#12171f] border border-slate-200/80 dark:border-[#1d2633] flex items-center justify-between cursor-pointer transition-all hover:border-slate-300 dark:hover:border-slate-700 shadow-xs"
+        className="p-3 rounded-2xl bg-white dark:bg-[#12171f] border border-slate-200/80 dark:border-[#1d2633] flex items-center justify-between cursor-pointer transition-all active:scale-[0.99] active:bg-slate-50 dark:active:bg-[#151c27] shadow-xs"
       >
         <div className="flex items-center">
           {/* Rounded Square Icon Box */}
@@ -116,7 +116,7 @@ export function TransactionCard({ transaction, onDelete, onEdit, showDate }: Tra
                 e.stopPropagation();
                 setShowDeleteModal(true);
               }}
-              className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-500 transition-opacity p-1.5 ml-1"
+              className="text-slate-400 active:text-rose-500 active:scale-90 transition-all p-1.5 ml-1"
               title="Delete"
               aria-label="Delete transaction"
             >

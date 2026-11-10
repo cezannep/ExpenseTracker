@@ -98,7 +98,7 @@ export default function AnalyticsPage() {
                 className={`flex-1 py-1.5 text-xs font-semibold rounded-full transition-all ${
                   isActive
                     ? "bg-slate-900 text-white dark:bg-white dark:text-black font-bold shadow-xs"
-                    : "text-slate-500 dark:text-[#8e9aa8] hover:text-slate-900 dark:hover:text-white"
+                    : "text-slate-500 dark:text-[#8e9aa8] active:scale-95"
                 }`}
               >
                 {t.label}

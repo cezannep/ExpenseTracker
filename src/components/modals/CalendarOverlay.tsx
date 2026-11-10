@@ -221,10 +221,10 @@ function CalendarOverlayContent() {
           <button
             type="button"
             onClick={handleSwitchToWeekly}
-            className={`px-4 py-1 rounded-full text-xs transition-all ${
+            className={`px-4 py-1 rounded-full text-xs transition-all active:scale-95 ${
               viewMode === "weekly"
                 ? "bg-white text-slate-900 dark:bg-white dark:text-black font-semibold shadow-xs"
-                : "text-slate-500 dark:text-slate-400 font-medium hover:text-slate-900 dark:hover:text-white"
+                : "text-slate-500 dark:text-slate-400 font-medium active:text-slate-900 dark:active:text-white"
             }`}
           >
             Weekly
@@ -232,10 +232,10 @@ function CalendarOverlayContent() {
           <button
             type="button"
             onClick={handleSwitchToMonthly}
-            className={`px-4 py-1 rounded-full text-xs transition-all ${
+            className={`px-4 py-1 rounded-full text-xs transition-all active:scale-95 ${
               viewMode === "monthly"
                 ? "bg-white text-slate-900 dark:bg-white dark:text-black font-semibold shadow-xs"
-                : "text-slate-500 dark:text-slate-400 font-medium hover:text-slate-900 dark:hover:text-white"
+                : "text-slate-500 dark:text-slate-400 font-medium active:text-slate-900 dark:active:text-white"
             }`}
           >
             Monthly
@@ -245,7 +245,7 @@ function CalendarOverlayContent() {
         <button
           type="button"
           onClick={handleOpenSettings}
-          className="p-1.5 rounded-full text-slate-500 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-white/10 transition-colors"
+          className="p-1.5 rounded-full text-slate-500 active:text-slate-900 active:bg-slate-100 dark:text-slate-300 dark:active:text-white dark:active:bg-white/10 active:scale-95 transition-all"
           title="Settings"
           aria-label="Settings"
         >
@@ -265,7 +265,7 @@ function CalendarOverlayContent() {
           <button
             type="button"
             onClick={handlePrev}
-            className="w-8 h-8 rounded-xl bg-slate-100/90 dark:bg-white/10 border border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-white flex items-center justify-center hover:bg-slate-200/80 dark:hover:bg-white/20 active:scale-95 transition-all"
+            className="w-8 h-8 rounded-xl bg-slate-100/90 dark:bg-white/10 border border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-white flex items-center justify-center active:bg-slate-200/80 dark:active:bg-white/20 active:scale-95 transition-all"
             aria-label={viewMode === "monthly" ? "Previous Month" : "Previous Week"}
           >
             <ChevronLeft className="w-4 h-4" />
@@ -273,7 +273,7 @@ function CalendarOverlayContent() {
           <button
             type="button"
             onClick={handleNext}
-            className="w-8 h-8 rounded-xl bg-slate-100/90 dark:bg-white/10 border border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-white flex items-center justify-center hover:bg-slate-200/80 dark:hover:bg-white/20 active:scale-95 transition-all"
+            className="w-8 h-8 rounded-xl bg-slate-100/90 dark:bg-white/10 border border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-white flex items-center justify-center active:bg-slate-200/80 dark:active:bg-white/20 active:scale-95 transition-all"
             aria-label={viewMode === "monthly" ? "Next Month" : "Next Week"}
           >
             <ChevronRight className="w-4 h-4" />
@@ -309,7 +309,7 @@ function CalendarOverlayContent() {
                     ? "bg-[#10B981] text-white font-bold shadow-md shadow-emerald-500/30 scale-105"
                     : isFuture
                     ? "text-slate-300 dark:text-slate-600 cursor-not-allowed dark:opacity-40"
-                    : "text-slate-800 dark:text-white font-medium hover:bg-slate-100/80 dark:hover:bg-white/15"
+                    : "text-slate-800 dark:text-white font-medium active:bg-slate-200/80 dark:active:bg-white/20 active:scale-95"
                 }`}
               >
                 {dayNum}
@@ -334,7 +334,7 @@ function CalendarOverlayContent() {
                     ? "bg-[#10B981] text-white font-bold shadow-md shadow-emerald-500/30 scale-105"
                     : isFuture
                     ? "text-slate-300 dark:text-slate-600 cursor-not-allowed dark:opacity-40"
-                    : "text-slate-800 dark:text-white font-medium hover:bg-slate-100/80 dark:hover:bg-white/15"
+                    : "text-slate-800 dark:text-white font-medium active:bg-slate-200/80 dark:active:bg-white/20 active:scale-95"
                 }`}
               >
                 {item.dayNum}
@@ -360,7 +360,7 @@ function CalendarOverlayContent() {
         <button
           type="button"
           onClick={handleNewExpense}
-          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#108A5E] hover:bg-[#129A6A] text-white font-semibold text-xs shadow-md shadow-emerald-700/20 dark:shadow-emerald-950/40 active:scale-95 transition-all shrink-0"
+          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#108A5E] active:bg-[#0e7c54] text-white font-semibold text-xs shadow-md shadow-emerald-700/20 dark:shadow-emerald-950/40 active:scale-95 transition-all shrink-0"
         >
           <Plus className="w-4 h-4 stroke-[2.5]" />
           <span>New Expense</span>

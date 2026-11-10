@@ -28,10 +28,10 @@ export function BottomNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                "transition-all duration-150 flex flex-col items-center justify-center",
+                "transition-all duration-150 flex flex-col items-center justify-center active:scale-95",
                 isActive
                   ? "bg-slate-900 text-white dark:bg-white dark:text-black font-bold px-4 py-1.5 rounded-2xl shadow-sm"
-                  : "text-slate-500 dark:text-[#8e9aa8] hover:text-slate-900 dark:hover:text-white px-3 py-1.5"
+                  : "text-slate-500 dark:text-[#8e9aa8] active:text-slate-900 dark:active:text-white px-3 py-1.5"
               )}
             >
               <Icon

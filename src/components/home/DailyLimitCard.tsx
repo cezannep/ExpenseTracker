@@ -94,7 +94,7 @@ export function DailyLimitCard() {
               <button
                 type="button"
                 onClick={() => setSelectedHomeDate(todayStr)}
-                className="text-[10px] font-semibold text-emerald-500 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full"
+                className="text-[10px] font-semibold text-emerald-500 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full active:scale-95 transition-all"
                 title="Return to today"
               >
                 Today
@@ -106,7 +106,7 @@ export function DailyLimitCard() {
             <button
               type="button"
               onClick={handleCalendarClick}
-              className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+              className="p-1 text-slate-400 active:text-slate-600 dark:active:text-slate-200 active:scale-95 transition-all"
               title="Pick date"
             >
               <CalendarIcon className="w-3.5 h-3.5" />

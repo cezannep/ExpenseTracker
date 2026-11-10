@@ -81,11 +81,11 @@ export function Header() {
       <div className="flex items-center gap-2">
         <button
           onClick={toggleDarkMode}
-          className="p-1 rounded-full text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors active:scale-95"
+          className="p-1 rounded-full text-slate-600 dark:text-slate-300 active:scale-95 transition-all"
           aria-label={isDarkMode ? "Switch to light theme" : "Switch to dark theme"}
         >
           {isDarkMode ? (
-            <Sun className="w-4 h-4 text-slate-300 hover:text-amber-300 transition-colors" />
+            <Sun className="w-4 h-4 text-slate-300 transition-colors" />
           ) : (
             <Moon className="w-4 h-4 text-slate-700" />
           )}
